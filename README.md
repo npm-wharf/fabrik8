@@ -1,0 +1,110 @@
+# fabrik8
+
+Provision and deploy cluster specifications from a single API.
+
+[![Build Status][travis-image]][travis-url]
+[![Coverage Status][coveralls-image]][coveralls-url]
+[![Version npm][version-image]][version-url]
+[![npm Downloads][downloads-image]][downloads-url]
+[![Dependencies][dependencies-image]][dependencies-url]
+
+### What It's For
+
+`fabrik8` was designed to handle initialization of Kubernetes clusters with an initial, known-set of software using a [`mcgonagall`](https://github.com/npm-wharf/mcgonagall) specification.
+
+It works well in environments where you might want ephemeral clusters, clusters on demand (think single tenancy), or think about things like automation and disaster recovery a lot.
+
+### What It's **Not** For
+
+`fabrik8` is not a CD solution (at least not presently). It is not meant to be run continuously against the same target (it cannot guarantee 100% idempotence). Running `fabrik8` multiple times _may_ yield unexpected results. For CD solutions, see [`hikaru`](https://github.com/npm-wharf/hikaru).
+
+## Approach
+
+fabrik8 uses [`kubeform`](https://github.com/npm-wharf/kubeform), [`mcgonagall`](https://github.com/npm-wharf/mcgonagall), and [`hikaru`](https://github.com/npm-wharf/hikaru) to provision clusters, transform specifications, and deploy them to the newly created cluster.
+
+## Environment Variables
+
+As noted in `kubeform`, many of the environment variables are cloud provider specific and will only be necessary when using a specific provider.
+
+| Variable | Description | Default |
+|:-:|---|---|
+| `KUBE_SERVICE` | The backing service to use for the request | `'GKE'` |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path to Google API credentials file | `''` |
+| `GOOGLE_ORGANIZATION_ID` | Google Organization Id to create projects under | `''` |
+| `GOOGLE_BILLING_ID` | Google Billing Account Id to associate with project | `''` |
+
+## API
+
+### `initiate(cluster, specification, data|onData)`
+
+The `initiate` call requires three arguments and returns a promise.
+
+#### `cluster`
+
+This will be the same as the `kubeform` cluster specification (not repeated here).
+
+#### `specification`
+
+The specification argument must either be a file path to the spec or a URL to the GitHub repo where the [mcgonagall](https://github.com/npm-wharf/mcgonagall) specification is located.
+
+#### `data|onData`
+
+The third argument can either be a hash of data required to satisfy tokens present in the specification, or a function that is passed a list of tokens required by the specification. If a function is provided, the result expected is a promise providing a hash of data.
+
+```js
+function getTokens (tokenList) {
+  // return token hash as a promise
+  return Promise.resolve({
+    tokenName: tokenValue
+  })
+}
+```
+
+To control how cluster data will be merged with the mcgonagall specification data, the hash should include a function named `onCluster`. It will be passed the cluster information returned from `kubeform` and the data. The signature is:
+
+```js
+function onCluster (data, clusterInfo) {
+  // assign new properties to data from clusterInfo as needed
+  data.someValue = clusterInfo.someSourceValue
+}
+```
+
+Without passing this function, all cluster details will be set as children of a `.cluster` property.
+
+#### Return
+
+Returns the cluster information from `kubeform` and the data used to satisfy the specification (under the property `specData`).
+
+The expectation is that this information will be stored for future retrieval when interacting with the cluster. `fabrik8` does not do anything beyond coordinate calls between libraries in order to simplify creation of fully functional 
+
+It is recommended that sensitive data (like the Kubernetes admin password) is stored separately in Vault or encrypted before storage.
+
+## CLI
+
+A CLI is also provided for `fabrik8` that allows you to invoke the API from the command line:
+
+### `fabrik8 init ./path/to/config -a ./path/to/authFile -s ./path/to/spec -f ./path/to/data -p gke`
+
+Similar to a blend of CLIs from its component libraries, `fabrik8` requires the following arguments:
+
+ * `./path/to/config`: configuration to base cluster provisioning on
+ * `-a`, `--auth`: the authfile to use when authenticating with the cloud provider
+ * `-m`, `--spec`: the path or URL to the mcgonagall specification
+ * `-f`, `--data`: the path to the data file to supply values for specification tokens
+ * `-o`, `--output`: the file to write data about the new cluster to (defaults to `cluster-{date-time}.json`)
+ * `-p`, `--provider`: the cloud provider to use
+ * `-s`, `--scale`: a scale factor (if available in the spec)
+ * `-t`, `--tokens`: where to write out all data used to populate the specification
+ * `-v`, `--apiVersion`: the Kubernetes API version (will attempt to detect the default version)
+ * `--verbose`: verbose logging, defaults to false
+
+[travis-image]: https://travis-ci.org/npm-wharf/fabrik8.svg?branch=master
+[travis-url]: https://travis-ci.org/npm-wharf/fabrik8
+[coveralls-url]: https://coveralls.io/github/npm-wharf/fabrik8?branch=master
+[coveralls-image]: https://coveralls.io/repos/github/npm-wharf/fabrik8/badge.svg?branch=master
+[version-image]: https://img.shields.io/npm/v/@npm-wharf/fabrik8.svg?style=flat
+[version-url]: https://www.npmjs.com/package/@npm-wharf/fabrik8
+[downloads-image]: https://img.shields.io/npm/dm/@npm-wharf/fabrik8.svg?style=flat
+[downloads-url]: https://www.npmjs.com/package/@npm-wharf/fabrik8
+[dependencies-image]: https://img.shields.io/david/npm-wharf/fabrik8.svg?style=flat
+[dependencies-url]: https://david-dm.org/npm-wharf/fabrik8
