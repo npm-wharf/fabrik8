@@ -21,7 +21,7 @@ async function deploySpecification (events, hikaru, cluster, specification, data
   const { onCluster: _1, ...filteredData } = data
   const opts = isCallback
     ? { ...filteredOpts, data: {} }
-    : { data: { ...filteredData }, ...filteredOpts }
+    : { data: filteredData, ...filteredOpts }
   const config = fount.get('config')
   config.url = `https://${cluster.masterEndpoint}`
   config.username = cluster.user
