@@ -26,7 +26,7 @@ function build () {
     provider: {
       alias: 'p',
       description: 'the cloud provider to use, defaults to KUBE_SERVICE environment variable',
-      default: process.env.KUBE_SERVICE
+      default: process.env.KUBE_SERVICE || 'GKE'
     },
     verbose: {
       description: 'output verbose logging (status check output for hikaru)',

@@ -16,15 +16,18 @@ async function initialize (events, Kubeform, hikaru, clusterConfig, specificatio
 
 async function deploySpecification (events, hikaru, cluster, specification, data, options) {
   const isCallback = typeof data === 'function'
+  const onCluster = options.onCluster || data.onCluster
+  const { onCluster: _0, ...filteredOpts } = options
+  const { onCluster: _1, ...filteredData } = data
   const opts = isCallback
-    ? Object.assign({}, options, { data: {} })
-    : Object.assign({}, { data }, options)
+    ? { ...filteredOpts, data: {} }
+    : { data: filteredData, ...filteredOpts }
   const config = fount.get('config')
   config.url = `https://${cluster.masterEndpoint}`
   config.username = cluster.user
   config.password = cluster.password
-  if (opts.onCluster) {
-    opts.onCluster(opts, cluster)
+  if (onCluster) {
+    onCluster(opts.data, cluster)
   } else {
     opts.data.cluster = cluster
   }
@@ -33,8 +36,8 @@ async function deploySpecification (events, hikaru, cluster, specification, data
     return opts
   } catch (e) {
     if (e.tokens && isCallback) {
-      return data(e.tokens)
-        .then(tokenData => deploySpecification(events, hikaru, cluster, specification, tokenData, options))
+      const tokenData = await data(e.tokens)
+      return deploySpecification(events, hikaru, cluster, specification, tokenData, options)
     } else {
       log.error(`fabrication failed during spec transfiguration step`)
       throw e
