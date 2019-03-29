@@ -1,13 +1,14 @@
 const bole = require('bole')
 const log = bole('fabrik8.api')
 const fount = require('fount')
+const filterUndefined = require('./filter')
 
 async function initialize (events, Kubeform, hikaru, clusterConfig, specification, data = {}, options = { data }) {
   try {
     const kubeform = new Kubeform(options)
     const cluster = await provisionCluster(events, kubeform, clusterConfig)
     const specData = await deploySpecification(events, hikaru, cluster, specification, data, options)
-    return Object.assign({}, cluster, { specData })
+    return Object.assign({}, cluster, { specData: filterUndefined(specData) })
   } catch (e) {
     log.error(e.stack)
     throw e

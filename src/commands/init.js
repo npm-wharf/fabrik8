@@ -124,7 +124,7 @@ function writeOutput (result, argv) {
     fs.writeFileSync(
       tokenPath,
       yaml.dump(
-        result.data,
+        result.specData.data,
         {
           skipInvalid: true,
           sortKeys: true,
