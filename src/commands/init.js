@@ -124,7 +124,7 @@ function writeOutput (result, argv) {
     fs.writeFileSync(
       tokenPath,
       yaml.dump(
-        result.data,
+        _filterUndefined(result.specData.data),
         {
           skipInvalid: true,
           sortKeys: true,
@@ -151,4 +151,29 @@ module.exports = function (fabricator, debugOut) {
     builder: build(),
     handler: handle.bind(null, fabricator, debugOut)
   }
+}
+
+const seen = []
+
+function _filterUndefined (obj) {
+  if (typeof obj === 'string' ||
+    typeof obj === 'number' ||
+    typeof obj === 'boolean') return obj
+
+  if (seen.includes(obj)) throw new Error('circular object')
+  seen.push(obj)
+  if (Array.isArray(obj)) {
+    const newArr = obj.filter(val => val !== undefined).map(_filterUndefined)
+    seen.pop()
+    return newArr
+  }
+
+  const newObj = {}
+  Object.keys(obj).forEach(key => {
+    const val = obj[key]
+    if (val === undefined) return
+    newObj[key] = _filterUndefined(val)
+  })
+  seen.pop()
+  return newObj
 }
