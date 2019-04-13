@@ -21,6 +21,7 @@ const debugOut = {
 require('yargs') // eslint-disable-line no-unused-expressions
   .usage('$0 <command> [options]')
   .command(require('../src/commands/init')(fabricator, debugOut))
+  .command(require('../src/commands/create')(fabricator, debugOut))
   .demandCommand(1, 'A command is required.')
   .help()
   .version()

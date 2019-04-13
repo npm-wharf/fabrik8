@@ -4,20 +4,22 @@ function build () {
   return {
     url: {
       description: 'the url of the cluster you wish to create',
-      alias: 'a',
-      required: true
+      alias: 'u',
+    },
+    name: {
+      description: 'the name of the cluster.  Can be inferred from the url',
+      alias: 'n'
+    },
+    subdomain: {
+      description: 'the subdomain of the cluster.  Can be inferred from the url'
+    },
+    projectId: {
+      description: 'the name of the gke project to use.  Can be inferred from the cluster name'
     },
     spec: {
       alias: 'm',
       required: true,
       description: 'the path or URL to the mcgonagall specification'
-    },
-    projectId: {
-      description: 'the name of the gke project to use.  Can be inferred from the url'
-    },
-    name: {
-      description: 'the name of the cluster.  Can be inferred from the url',
-      alias: 'n'
     },
     verbose: {
       description: 'output verbose logging (status check output for hikaru)',
@@ -37,23 +39,34 @@ function build () {
       default: process.env.VAULT_TOKEN
     },
     provider: {
-      alias: 'p',
       description: 'the cloud provider to use, defaults to KUBE_SERVICE environment variable',
       default: process.env.KUBE_SERVICE || 'GKE'
     }
   }
 }
 
-async function handle (fabricator, debugOut, argv) {
+function handle (fabricator, debugOut, argv) {
+  main(fabricator, debugOut, argv)
+    .catch(err => {
+      console.error(err.stack)
+      process.exit(1)
+    })
+}
+
+async function main (fabricator, debugOut, argv) {
   // fetch info from vault
   const {
     redisUrl,
     vaultHost,
     vaultToken,
-    url,
-    name,
+
     projectId
   } = argv
+  const {
+    name,
+    subdomain,
+    url
+  } = _reconcileName(argv)
   if (!redisUrl || !vaultHost || !vaultToken) {
     throw new Error('Invalid configuration for cluster-info Vault.')
   }
@@ -62,10 +75,10 @@ async function handle (fabricator, debugOut, argv) {
 
   // reconcile options with argv
   const { allowedSubdomains } = commonDefaults
-  if (allowedSubdomains.some(subd => !url.includes(subd))) {
+  if (allowedSubdomains && !allowedSubdomains.includes(subdomain)) {
     throw new Error(`${url} not a subdomain of ${allowedSubdomains.join(', ')}`)
   }
-
+  console.log('blah')
 
   // fabrik8
 
@@ -77,9 +90,32 @@ module.exports = function (fabricator, debugOut) {
     command: 'create [options]',
     desc: 'performs full provisioning of a Kubernetes cluster and deployment of software.\n' +
           'It will fetch defaults from a configured Vault server, and store results in Vault.\n' +
-          'Defaults can be overridden as extra yargs arguments, e.g.:\n\n',
+          'Defaults can be overridden as extra yargs arguments, e.g.:\n\n' +
           '--zones eu-central-1b',
     builder: build(),
     handler: handle.bind(null, fabricator, debugOut)
   }
+}
+
+function _reconcileName (argv) {
+  const {
+    url: inputUrl,
+    name: inputName,
+    subdomain: inputSubdomain = 'npme.io'
+  } = argv
+
+  let url, name, subdomain
+
+  if (inputUrl) {
+    url = inputUrl
+    name = url.slice(0, url.indexOf('.'))
+    subdomain = url.slice(url.indexOf('.') + 1)
+  } else {
+    if (!inputName) throw new Error('Either a `name` or a `url` must be supplied.')
+    name = inputName
+    subdomain = inputSubdomain
+    url = `${name}.${subdomain}`
+  }
+
+  return { url, name, subdomain }
 }
