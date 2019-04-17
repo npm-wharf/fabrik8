@@ -1,10 +1,11 @@
 const createInfoClient = require('@npm-wharf/cluster-info-client')
+const createReconciler = require('../reconcile')
 
 function build () {
   return {
     url: {
       description: 'the url of the cluster you wish to create',
-      alias: 'u',
+      alias: 'u'
     },
     name: {
       description: 'the name of the cluster.  Can be inferred from the url',
@@ -16,8 +17,12 @@ function build () {
     projectId: {
       description: 'the name of the gke project to use.  Can be inferred from the cluster name'
     },
-    spec: {
-      alias: 'm',
+    environment: {
+      description: 'the environment of the cluster, e.g. development, production',
+      default: 'production'
+    },
+    specification: {
+      alias: ['m', 'spec'],
       required: true,
       description: 'the path or URL to the mcgonagall specification'
     },
@@ -58,31 +63,27 @@ async function main (fabricator, debugOut, argv) {
   const {
     redisUrl,
     vaultHost,
-    vaultToken,
-
-    projectId
+    vaultToken
   } = argv
-  const {
-    name,
-    subdomain,
-    url
-  } = _reconcileName(argv)
   if (!redisUrl || !vaultHost || !vaultToken) {
     throw new Error('Invalid configuration for cluster-info Vault.')
   }
   const clusterInfo = createInfoClient({ redisUrl, vaultToken, vaultHost })
-  const commonDefaults = await clusterInfo.getCommon()
+  const { processArgv } = createReconciler(clusterInfo)
 
   // reconcile options with argv
-  const { allowedSubdomains } = commonDefaults
-  if (allowedSubdomains && !allowedSubdomains.includes(subdomain)) {
-    throw new Error(`${url} not a subdomain of ${allowedSubdomains.join(', ')}`)
-  }
-  console.log('blah')
-
+  const { clusterConfig, specification, data } = await processArgv(argv)
   // fabrik8
 
+  console.log(clusterConfig)
+  console.log(specification)
+  console.log(data)
+  // const resultOpts = await fabricator.initialize(clusterConfig, specification, data)
+
   // store results in vault
+  //
+  // await storeResult(results)
+  clusterInfo.close()
 }
 
 module.exports = function (fabricator, debugOut) {
@@ -91,31 +92,9 @@ module.exports = function (fabricator, debugOut) {
     desc: 'performs full provisioning of a Kubernetes cluster and deployment of software.\n' +
           'It will fetch defaults from a configured Vault server, and store results in Vault.\n' +
           'Defaults can be overridden as extra yargs arguments, e.g.:\n\n' +
-          '--zones eu-central-1b',
+          '--arg-organizationId 1234567890',
     builder: build(),
     handler: handle.bind(null, fabricator, debugOut)
   }
 }
 
-function _reconcileName (argv) {
-  const {
-    url: inputUrl,
-    name: inputName,
-    subdomain: inputSubdomain = 'npme.io'
-  } = argv
-
-  let url, name, subdomain
-
-  if (inputUrl) {
-    url = inputUrl
-    name = url.slice(0, url.indexOf('.'))
-    subdomain = url.slice(url.indexOf('.') + 1)
-  } else {
-    if (!inputName) throw new Error('Either a `name` or a `url` must be supplied.')
-    name = inputName
-    subdomain = inputSubdomain
-    url = `${name}.${subdomain}`
-  }
-
-  return { url, name, subdomain }
-}
