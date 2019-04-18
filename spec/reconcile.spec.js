@@ -20,26 +20,27 @@ const CLUSTER_DEFAULTS = {
     max: 6,
     storage: {
       persistent: '160GB'
-    },
+    }
   },
 
   flags: {
     alphaFeatures: false,
     maintenanceWindow: '08:00:00Z',
-    networkPolicy: true,
+    networkPolicy: true
   },
   manager: {
-    distributed: false,
+    distributed: false
   },
   managers: 1
 }
+const TOKEN_DEFAULTS = {}
 const DEFAULT_PROPS = {
   billingAccount: '234523452345',
   organizationId: '123412341234',
   user: 'admin',
   version: '1.10.11-gke.1',
   basicAuth: true,
-  zones: ['us-central1-a'],
+  zones: ['us-central1-a']
 }
 const DEFAULTS = {
   allowedSubdomains: ['npme.io', 'google.io'],
@@ -51,11 +52,11 @@ const DEFAULTS = {
     service_accout: 'my-sa2@iam.google.com',
     credendials: 'my-sa@iam.google.com'
   },
-  tokens: {...TOKEN_DEFAULTS},
-  cluster: {...CLUSTER_DEFAULTS}
+  tokens: { ...TOKEN_DEFAULTS },
+  cluster: { ...CLUSTER_DEFAULTS }
 }
 
-describe('filterUndefined', () => {
+describe('reconciler', () => {
   describe('processArgv', () => {
     let processArgv
 
@@ -73,11 +74,12 @@ describe('filterUndefined', () => {
     it('should process argv and get options', (done) => {
       const result = processArgv({ name: 'mycluster', specification: '.' })
       result.should.eql({
-        specification: '.'
+        specification: '.',
         cluster: {
-          name: 'mycluster'
+          name: 'mycluster',
           ...CLUSTER_DEFAULTS
         }
+
       })
     })
   })

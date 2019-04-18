@@ -3,7 +3,7 @@ const log = bole('fabrik8.api')
 const fount = require('fount')
 const filterUndefined = require('./filter')
 
-async function initialize (events, Kubeform, hikaru, clusterConfig, specification, data = {}, options = { data }) {
+const initialize = (events, Kubeform, hikaru) => async (clusterConfig, specification, data = {}, options = { data }) => {
   try {
     const kubeform = new Kubeform(options)
     const cluster = await provisionCluster(events, kubeform, clusterConfig)
@@ -58,8 +58,8 @@ function provisionCluster (events, kubeform, clusterConfig) {
     })
 }
 
-module.exports = function (events, Kubeform, hikaru) {
+module.exports = (events, Kubeform, hikaru) => {
   return {
-    initialize: initialize.bind(null, events, Kubeform, hikaru)
+    initialize: initialize(events, Kubeform, hikaru)
   }
 }

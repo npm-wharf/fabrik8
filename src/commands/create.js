@@ -72,13 +72,13 @@ async function main (fabricator, debugOut, argv) {
   const { processArgv } = createReconciler(clusterInfo)
 
   // reconcile options with argv
-  const { clusterConfig, specification, data } = await processArgv(argv)
+  const { kubeformSettings, hikaruSettings, specification } = await processArgv(argv)
   // fabrik8
 
-  console.log(clusterConfig)
+  console.log(kubeformSettings)
   console.log(specification)
   console.log(data)
-  // const resultOpts = await fabricator.initialize(clusterConfig, specification, data)
+  // const resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
 
   // store results in vault
   //

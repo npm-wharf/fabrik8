@@ -1,38 +1,61 @@
 const util = require('util')
+const uuid = require('uuid')
 
 module.exports = function (clusterInfo) {
+  /**
+   * A lot is going on here!  We have to take in the yargs args, and then
+   * produce the params needed for fabrik8.  Some of these will be inferred
+   * from the input, others will come from Vault as default values.  Some params
+   * will come from previous fabrik8 runs, if the cluster exists!  We also have
+   * to process args that override defaults, and generate certain missing values
+   * according to rules specified in the common default config.
+   * @param  {Object} argv Yargs args
+   * @return {Object}      parameters to pass to fabrik8 api
+   */
   async function processArgv (argv) {
     const {
-      environment
+      environment,
+      specification
     } = argv
 
-    let commonDefaults = await clusterInfo.getCommon()
+    let commonDefaultConfig = await clusterInfo.getCommon()
 
     const {
       name,
       subdomain,
       url
-    } = _reconcileName(argv, commonDefaults.allowedSubdomains)
+    } = _reconcileName(argv, commonDefaultConfig.allowedSubdomains)
 
-    var clusterData = {}
-    try {
-      clusterData = await clusterInfo.getCluster(name)
-    } catch (e) {}
-
-    clusterData = await _reifyServiceAccounts(clusterData)
-    commonDefaults = await _reifyServiceAccounts(commonDefaults)
-
-    const {
-      projectPrefix = ''
-    } = commonDefaults
+    const { projectPrefix = '' } = commonDefaultConfig
     const projectId = argv.projectId || `${projectPrefix}${name}`
 
+    const commonSettings = { name, subdomain, url, projectId }
 
-    console.log({ name, subdomain, url, projectId, clusterData })
+    try {
+      var existingClusterConfig = await clusterInfo.getCluster(name)
+    } catch (e) {}
+
+    var inputSettings = existingClusterConfig
+
+    if (!existingClusterConfig) {
+      inputSettings = _extendDefaults(commonDefaultConfig, commonSettings, argv)
+    }
+
+    // fetch service accounts
+    inputSettings = await _reifyServiceAccounts(inputSettings)
+
+    // override parameters
+    inputSettings = _yargsOverrides(inputSettings, argv)
+
+    console.log(commonDefaultConfig)
+
+    console.log({ name, subdomain, url, projectId, existingClusterConfig })
+
+
     return {
-      clusterConfig,
-      specification,
-      data
+      kubeformSettings, // kubeform params
+      hikaruSettings, // hikaru tokens
+      specification
     }
   }
 
@@ -76,6 +99,44 @@ module.exports = function (clusterInfo) {
     return { url, name, subdomain }
   }
 
+  function _extendDefaults (commonDefaultConfig, commonSettings, argv) {
+    // clone defaults
+    const newSettings = JSON.parse(JSON.stringify(commonDefaultConfig))
+    const { common, tokens } = newSettings
+
+    // generate cluster user/password
+    common.user = common.user || 'admin'
+    common.password = uuid.v4()
+    // generate dashboard pass
+    tokens.dashboardAdmin = tokens.dashboardAdmin || 'admin'
+    tokens.dashboardPass = uuid.v4()
+
+    return newSettings
+  }
+
+  function _yargsOverrides (settings, argv) {
+    const prefix = 'arg-'
+    Object.keys(argv)
+      .filter(key => key.startsWith(prefix))
+      .forEach(key => {
+        const val = argv[key]
+        const path = key.replace(prefix, '').split('.')
+        if (path.length === 1) {
+          return _setIn(settings.common, path, val)
+        }
+        _setIn(settings, path, val)
+      })
+  }
+
+  function _setIn (obj, path, val) {
+    let i
+    for (i = 0; i < path.length - 1; i++) {
+      obj = obj[path[i]]
+      if (!obj) return
+    }
+    obj[path[i]] = val
+  }
+
   async function _reifyServiceAccounts (clusterData) {
     const { serviceAccounts = {}, ...newData } = clusterData
 
@@ -92,7 +153,11 @@ module.exports = function (clusterInfo) {
       if (key in newData || newData[key] === email) {
         newData[key] = JSON.stringify(accounts[key])
       }
-      const { tokens } = newData
+      const { common = {} } = newData
+      if (key in common || common[key] === email) {
+        common[key] = JSON.stringify(accounts[key])
+      }
+      const { tokens = {} } = newData
       if (key in tokens || tokens[key] === email) {
         tokens[key] = JSON.stringify(accounts[key])
       }
