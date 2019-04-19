@@ -78,11 +78,11 @@ async function main (fabricator, debugOut, argv) {
   console.log(kubeformSettings)
   console.log(specification)
   console.log(data)
+  // await storeResult(results)
   // const resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
 
   // store results in vault
   //
-  // await storeResult(results)
   clusterInfo.close()
 }
 

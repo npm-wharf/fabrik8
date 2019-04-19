@@ -33,7 +33,10 @@ const CLUSTER_DEFAULTS = {
   },
   managers: 1
 }
-const TOKEN_DEFAULTS = {}
+const TOKEN_DEFAULTS = {
+  nginx_upstream1: 'frontdoor.svc.cluster.local:5000',
+  nginx_upstream2: 'rewrite.svc.cluster.local:5001'
+}
 const DEFAULT_PROPS = {
   billingAccount: '234523452345',
   organizationId: '123412341234',
@@ -42,44 +45,197 @@ const DEFAULT_PROPS = {
   basicAuth: true,
   zones: ['us-central1-a']
 }
-const DEFAULTS = {
-  allowedSubdomains: ['npme.io', 'google.io'],
-  projectPrefix: 'project-',
-  ...DEFAULT_PROPS,
-  credendials: 'my-sa@iam.google.com',
-
-  serviceAccounts: {
-    service_accout: 'my-sa2@iam.google.com',
-    credendials: 'my-sa@iam.google.com'
-  },
-  tokens: { ...TOKEN_DEFAULTS },
-  cluster: { ...CLUSTER_DEFAULTS }
-}
+const UUID = '12341234-1234-1234-1234-123412341234'
 
 describe('reconciler', () => {
   describe('processArgv', () => {
-    let processArgv
+    describe('with full defaults', () => {
+      const DEFAULTS = {
+        allowedSubdomains: ['npme.io', 'google.io'],
+        projectPrefix: 'project-',
+        ...DEFAULT_PROPS,
+        credendials: 'my-sa@iam.google.com',
 
-    before(() => {
-      processArgv = createReconciler({
-        async getCommon () {
-          return DEFAULTS
+        serviceAccounts: {
+          service_accout: 'my-sa2@iam.google.com',
+          credendials: 'my-sa@iam.google.com'
         },
-        async getServiceAccount (email) {
-          return SERVICE_ACCOUNTS.find(json => json.client_email === email)
+        tokens: { ...TOKEN_DEFAULTS },
+        cluster: { ...CLUSTER_DEFAULTS }
+      }
+      let processArgv
+
+      before(() => {
+        processArgv = createReconciler(
+          {
+            async getCommon () {
+              return DEFAULTS
+            },
+            async getServiceAccount (email) {
+              return SERVICE_ACCOUNTS.find(json => json.client_email === email)
+            }
+          },
+          {
+            v4 () {
+              return UUID
+            }
+          }
+        ).processArgv
+      })
+
+      it('should process argv and get options', async () => {
+        const result = await processArgv({ name: 'mycluster', specification: '.' })
+        const expectedCommon = {
+          name: 'mycluster',
+          url: 'mycluster.npme.io',
+          subdomain: 'npme.io',
+          projectId: 'project-mycluster',
+          environment: 'production',
+          user: 'admin',
+          password: UUID
         }
-      }).processArgv
+        result.should.eql({
+          specification: '.',
+          kubeformSettings: {
+            ...CLUSTER_DEFAULTS,
+            ...expectedCommon
+          },
+          hikaruSettings: {
+            ...TOKEN_DEFAULTS,
+            ...expectedCommon,
+            dashboardAdmin: 'admin',
+            dashboardPass: '12341234-1234-1234-1234-123412341234'
+
+          }
+        })
+      })
     })
 
-    it('should process argv and get options', (done) => {
-      const result = processArgv({ name: 'mycluster', specification: '.' })
-      result.should.eql({
+    describe('with less defaults', () => {
+      const DEFAULTS = {
+        allowedSubdomains: ['npme.io', 'google.io'],
+        ...DEFAULT_PROPS,
+        credendials: 'my-sa@iam.google.com',
+
+        serviceAccounts: {
+          service_accout: 'my-sa2@iam.google.com',
+          credendials: 'my-sa@iam.google.com'
+        },
+        cluster: { ...CLUSTER_DEFAULTS }
+      }
+      let processArgv
+
+      before(() => {
+        processArgv = createReconciler(
+          {
+            async getCommon () {
+              return DEFAULTS
+            },
+            async getServiceAccount (email) {
+              return SERVICE_ACCOUNTS.find(json => json.client_email === email)
+            }
+          },
+          {
+            v4 () {
+              return UUID
+            }
+          }
+        ).processArgv
+      })
+
+      it('should process argv and get options', async () => {
+        const result = await processArgv({ name: 'mycluster', specification: '.' })
+        const expectedCommon = {
+          name: 'mycluster',
+          url: 'mycluster.npme.io',
+          subdomain: 'npme.io',
+          projectId: 'mycluster',
+          environment: 'production',
+          user: 'admin',
+          password: UUID
+        }
+        result.should.eql({
+          specification: '.',
+          kubeformSettings: {
+            ...CLUSTER_DEFAULTS,
+            ...expectedCommon
+          },
+          hikaruSettings: {
+            ...expectedCommon,
+            dashboardAdmin: 'admin',
+            dashboardPass: '12341234-1234-1234-1234-123412341234'
+          }
+        })
+      })
+    })
+
+    describe('with existing cluster data', () => {
+      const DEFAULTS = {
+        allowedSubdomains: ['npme.io', 'google.io'],
+        projectPrefix: 'project-',
+        ...DEFAULT_PROPS,
+        credendials: 'my-sa@iam.google.com',
+
+        serviceAccounts: {
+          service_accout: 'my-sa2@iam.google.com',
+          credendials: 'my-sa@iam.google.com'
+        },
+        tokens: { ...TOKEN_DEFAULTS },
+        cluster: { ...CLUSTER_DEFAULTS }
+      }
+      const COMMON = {
+        name: 'mycluster',
+        url: 'mycluster.npme.io',
+        subdomain: 'npme.io',
+        projectId: 'project-mycluster',
+        environment: 'production',
+        user: 'admin',
+        password: UUID
+      }
+      const STORED = {
         specification: '.',
         cluster: {
-          name: 'mycluster',
-          ...CLUSTER_DEFAULTS
+          ...CLUSTER_DEFAULTS,
+          ...COMMON
+        },
+        tokens: {
+          ...TOKEN_DEFAULTS,
+          ...COMMON,
+          dashboardAdmin: 'admin',
+          dashboardPass: '12341234-1234-1234-1234-123412341234'
         }
+      }
+      let processArgv
 
+      before(() => {
+        processArgv = createReconciler(
+          {
+            async getCommon () {
+              return DEFAULTS
+            },
+            async getServiceAccount (email) {
+              return SERVICE_ACCOUNTS.find(json => json.client_email === email)
+            },
+            async getCluster (name) {
+              return STORED
+            }
+          },
+          {
+            v4 () {
+              return UUID
+            }
+          }
+        ).processArgv
+      })
+
+      it('should process argv and get options', async () => {
+        const result = await processArgv({ name: 'mycluster', specification: '.' })
+
+        result.should.eql({
+          specification: STORED.specification,
+          hikaruSettings: STORED.tokens,
+          kubeformSettings: STORED.cluster
+        })
       })
     })
   })
@@ -151,6 +307,68 @@ describe('reconciler', () => {
     })
   })
 
+  describe('_yargsOverrides', () => {
+    let _yargsOverrides
+
+    before(() => {
+      _yargsOverrides = createReconciler({})._yargsOverrides
+    })
+
+    it('should override deep properties', async () => {
+      const input = {
+        common: {
+          a: 1,
+          b: 1,
+          c: {
+            d: 1
+          }
+        },
+        tokens: {
+          e: 1
+        },
+        cluster: {
+          f: 1,
+          g: {
+            h: 1
+          }
+        }
+      }
+      const argv = {
+        'arg-a': 2,
+        'arg-tokens.e': 2,
+        'arg-cluster.g.h': 2
+      }
+      const result = _yargsOverrides(input, argv)
+
+      result.should.eql({
+        common: {
+          a: 2,
+          b: 1,
+          c: {
+            d: 1
+          }
+        },
+        tokens: {
+          e: 2
+        },
+        cluster: {
+          f: 1,
+          g: {
+            h: 2
+          }
+        }
+      })
+    })
+
+    it('should ignore non-existend objects', async () => {
+      const result = _yargsOverrides({}, {
+        'arg-foo.bar': 1
+      })
+
+      result.should.eql({})
+    })
+  })
+
   describe('_reifyServiceAccounts', () => {
     let _reifyServiceAccounts
 
@@ -170,6 +388,10 @@ describe('reconciler', () => {
         },
         other: 'bar',
 
+        common: {
+          auth: 'my-sa2@iam.google.com',
+        },
+
         auth: 'my-sa2@iam.google.com',
         tokens: {
           my_sa: 'my-sa@iam.google.com',
@@ -180,11 +402,28 @@ describe('reconciler', () => {
       result.should.eql({
         other: 'bar',
         auth: JSON.stringify(SERVICE_ACCOUNTS[1]),
+        common: {
+          auth: JSON.stringify(SERVICE_ACCOUNTS[1]),
+        },
         tokens: {
           my_sa: JSON.stringify(SERVICE_ACCOUNTS[0]),
           other: 'foo'
         }
       })
+    })
+
+    it('should noop if no serviceAccounts in tokens', async () => {
+      const result = await _reifyServiceAccounts({
+        foo: 'bar',
+        serviceAccounts: { my_sa: 'my-sa@iam.google.com' }
+      })
+
+      result.should.eql({ foo: 'bar' })
+    })
+
+    it('should noop if no serviceAccounts', async () => {
+      const result = await _reifyServiceAccounts({ foo: 'bar' })
+      result.should.eql({ foo: 'bar' })
     })
   })
 })

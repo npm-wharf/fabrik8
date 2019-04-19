@@ -1,7 +1,4 @@
-const util = require('util')
-const uuid = require('uuid')
-
-module.exports = function (clusterInfo) {
+module.exports = function (clusterInfo, uuid = require('uuid')) {
   /**
    * A lot is going on here!  We have to take in the yargs args, and then
    * produce the params needed for fabrik8.  Some of these will be inferred
@@ -14,7 +11,7 @@ module.exports = function (clusterInfo) {
    */
   async function processArgv (argv) {
     const {
-      environment,
+      environment = 'production',
       specification
     } = argv
 
@@ -29,7 +26,7 @@ module.exports = function (clusterInfo) {
     const { projectPrefix = '' } = commonDefaultConfig
     const projectId = argv.projectId || `${projectPrefix}${name}`
 
-    const commonSettings = { name, subdomain, url, projectId }
+    const commonSettings = { name, subdomain, url, projectId, environment }
 
     try {
       var existingClusterConfig = await clusterInfo.getCluster(name)
@@ -47,10 +44,19 @@ module.exports = function (clusterInfo) {
     // override parameters
     inputSettings = _yargsOverrides(inputSettings, argv)
 
-    console.log(commonDefaultConfig)
+    const { common, cluster, tokens } = inputSettings
 
-    console.log({ name, subdomain, url, projectId, existingClusterConfig })
+    const kubeformSettings = {
+      ...common,
+      ...cluster,
+      ...commonSettings
+    }
 
+    const hikaruSettings = {
+      ...common,
+      ...tokens,
+      ...commonSettings
+    }
 
     return {
       kubeformSettings, // kubeform params
@@ -69,6 +75,7 @@ module.exports = function (clusterInfo) {
 
     // for testing
     _reconcileName,
+    _yargsOverrides,
     _reifyServiceAccounts
   }
 
@@ -102,7 +109,11 @@ module.exports = function (clusterInfo) {
   function _extendDefaults (commonDefaultConfig, commonSettings, argv) {
     // clone defaults
     const newSettings = JSON.parse(JSON.stringify(commonDefaultConfig))
-    const { common, tokens } = newSettings
+    const { common = {}, tokens = {} } = newSettings
+
+    // in case they don't exist
+    newSettings.common = common
+    newSettings.tokens = tokens
 
     // generate cluster user/password
     common.user = common.user || 'admin'
@@ -126,6 +137,7 @@ module.exports = function (clusterInfo) {
         }
         _setIn(settings, path, val)
       })
+    return settings
   }
 
   function _setIn (obj, path, val) {
