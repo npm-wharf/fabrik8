@@ -28,7 +28,7 @@ describe('API', function () {
   }
   const hikaruSpec = {
     ...options,
-    data: { ...data }
+    ...data
   }
   let hikaruConfig
 
@@ -92,7 +92,7 @@ describe('API', function () {
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
-          .resolves(clusterDetail)
+          .resolves({ ...clusterDetail })
         class Kubeform {
           constructor () {
             this.on = onExpectation
@@ -110,7 +110,8 @@ describe('API', function () {
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, {
             ...options,
-            data: { ...data, cluster: clusterDetail }
+            ...data,
+            cluster: { ...clusterDetail }
           })
           .once()
           .rejects(err)
@@ -157,7 +158,7 @@ describe('API', function () {
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
-          .resolves(clusterDetail)
+          .resolves({ ...clusterDetail })
         class Kubeform {
           constructor () {
             this.on = onExpectation
@@ -181,13 +182,13 @@ describe('API', function () {
         err.tokens = tokenList
         hMock = sinon.mock(hikaru)
 
-        let firstArgs = Object.assign({}, options, { data: { cluster: clusterDetail } })
+        let firstArgs = { ...options, cluster: { ...clusterDetail } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, firstArgs)
           .once()
           .rejects(err)
 
-        let secondArgs = { ...hikaruSpec, data: { ...specData, cluster: clusterDetail } }
+        let secondArgs = { ...hikaruSpec, ...specData, cluster: { ...clusterDetail } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, secondArgs)
           .once()
@@ -198,8 +199,8 @@ describe('API', function () {
           return Promise.resolve(specData)
         }
 
-        let tempSpec = { data: { ...specData, cluster: clusterDetail }, ...options }
-        clusterInfo = Object.assign({}, clusterDetail, { specData: tempSpec })
+        let tempSpec = { ...specData, ...options }
+        clusterInfo = { cluster: { ...clusterDetail }, tokens: tempSpec }
         fabrik8 = API(events, Kubeform, hikaru)
       })
 
@@ -248,7 +249,7 @@ describe('API', function () {
       createExpectations = sinon.mock('create')
         .withArgs(clusterConfig)
         .once()
-        .resolves(clusterDetail)
+        .resolves({ ...clusterDetail })
       class Kubeform {
         constructor () {
           this.on = onExpectation
@@ -272,22 +273,18 @@ describe('API', function () {
       const err = new Error('tokens are missing')
       err.tokens = tokenList
 
-      onCluster = (opts, cluster) => {
-        opts.ip = cluster.masterEndpoint
+      onCluster = (tokens, cluster) => {
+        tokens.ip = cluster.masterEndpoint
       }
 
       const firstArgs = {
         ...hikaruSpec,
-        data: {
-          cluster: { ...clusterDetail }
-        }
+        cluster: { ...clusterDetail }
       }
       const secondArgs = {
         ...hikaruSpec,
-        data: {
-          ...specData,
-          cluster: { ...clusterDetail }
-        },
+        ...specData,
+        cluster: { ...clusterDetail },
         onCluster
       }
 
@@ -310,11 +307,10 @@ describe('API', function () {
       }
 
       clusterInfo = {
-        ...clusterDetail,
-        specData: {
-          data: {
-            ...specData
-          },
+        cluster: { ...clusterDetail },
+        tokens: {
+          ...hikaruSpec,
+          ...specData,
           ...options
         }
       }
@@ -355,7 +351,7 @@ describe('API', function () {
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
-          .resolves(clusterDetail)
+          .resolves({ ...clusterDetail })
         class Kubeform {
           constructor () {
             this.on = onExpectation
@@ -365,7 +361,7 @@ describe('API', function () {
 
         const err = new Error('something went terribly wrong')
         hMock = sinon.mock(hikaru)
-        const newSpec = { ...hikaruSpec, data: { ...data, cluster: clusterDetail } }
+        const newSpec = { ...hikaruSpec, ...data, cluster: { ...clusterDetail } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, newSpec)
           .once()
@@ -404,7 +400,7 @@ describe('API', function () {
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
-          .resolves(clusterDetail)
+          .resolves({ ...clusterDetail })
         class Kubeform {
           constructor () {
             this.on = onExpectation
@@ -419,17 +415,16 @@ describe('API', function () {
         }
         hMock = sinon.mock(hikaru)
 
-        newSpec = { ...hikaruSpec, data: { ...specData, cluster: clusterDetail } }
+        newSpec = { ...hikaruSpec, ...specData, cluster: { ...clusterDetail } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, newSpec)
           .once()
           .resolves({})
 
-        let tempSpec = { ...specData, cluster: clusterDetail }
         clusterInfo = {
-          ...clusterDetail,
-          specData: {
-            data: tempSpec,
+          cluster: { ...clusterDetail },
+          tokens: {
+            ...specData,
             ...options
           }
         }

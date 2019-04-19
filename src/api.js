@@ -6,9 +6,9 @@ const filterUndefined = require('./filter')
 const initialize = (events, Kubeform, hikaru) => async (clusterConfig, specification, data = {}, options = { data }) => {
   try {
     const kubeform = new Kubeform(options)
-    const cluster = await provisionCluster(events, kubeform, clusterConfig)
-    const specData = await deploySpecification(events, hikaru, cluster, specification, data, options)
-    return Object.assign({}, cluster, { specData: filterUndefined(specData) })
+    const initialCluster = await provisionCluster(events, kubeform, clusterConfig)
+    const { cluster, ...specData } = await deploySpecification(events, hikaru, initialCluster, specification, data, options)
+    return { cluster, tokens: filterUndefined(specData) }
   } catch (e) {
     log.error(e.stack)
     throw e
@@ -20,21 +20,21 @@ async function deploySpecification (events, hikaru, cluster, specification, data
   const onCluster = options.onCluster || data.onCluster
   const { onCluster: _0, ...filteredOpts } = options
   const { onCluster: _1, ...filteredData } = data
-  const opts = isCallback
-    ? { ...filteredOpts, data: {} }
-    : { data: filteredData, ...filteredOpts }
+  const tokens = isCallback
+    ? filteredOpts
+    : { ...filteredData, ...filteredOpts }
   const config = fount.get('config')
   config.url = `https://${cluster.masterEndpoint}`
   config.username = cluster.user
   config.password = cluster.password
   if (onCluster) {
-    onCluster(opts.data, cluster)
-  } else {
-    opts.data.cluster = cluster
+    onCluster(tokens, cluster)
   }
+  tokens.cluster = cluster
+
   try {
-    await hikaru.deployCluster(specification, opts)
-    return opts
+    await hikaru.deployCluster(specification, tokens)
+    return tokens
   } catch (e) {
     if (e.tokens && isCallback) {
       const tokenData = await data(e.tokens)
