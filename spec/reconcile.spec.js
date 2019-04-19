@@ -389,7 +389,7 @@ describe('reconciler', () => {
         other: 'bar',
 
         common: {
-          auth: 'my-sa2@iam.google.com',
+          auth: 'my-sa2@iam.google.com'
         },
 
         auth: 'my-sa2@iam.google.com',
@@ -403,7 +403,7 @@ describe('reconciler', () => {
         other: 'bar',
         auth: JSON.stringify(SERVICE_ACCOUNTS[1]),
         common: {
-          auth: JSON.stringify(SERVICE_ACCOUNTS[1]),
+          auth: JSON.stringify(SERVICE_ACCOUNTS[1])
         },
         tokens: {
           my_sa: JSON.stringify(SERVICE_ACCOUNTS[0]),

@@ -77,7 +77,7 @@ async function main (fabricator, debugOut, argv) {
 
   console.log(kubeformSettings)
   console.log(specification)
-  console.log(data)
+  console.log(hikaruSettings)
   // await storeResult(results)
   // const resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
 
@@ -97,4 +97,3 @@ module.exports = function (fabricator, debugOut) {
     handler: handle.bind(null, fabricator, debugOut)
   }
 }
-
