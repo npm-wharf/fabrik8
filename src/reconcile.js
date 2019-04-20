@@ -1,4 +1,14 @@
 module.exports = function (clusterInfo, uuid = require('uuid')) {
+  return {
+    processArgv,
+    storeResult,
+
+    // for testing
+    _reconcileName,
+    _yargsOverrides,
+    _reifyServiceAccounts
+  }
+
   /**
    * A lot is going on here!  We have to take in the yargs args, and then
    * produce the params needed for fabrik8.  Some of these will be inferred
@@ -66,17 +76,24 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
   }
 
   async function storeResult (resultOpts) {
+    const [ serviceAccounts, filteredOpts ] = _removeServiceAccounts(resultOpts)
+    const {
+      cluster,
+      tokens
+    } = filteredOpts
 
-  }
+    await Promise.all(serviceAccounts.map(async ([key, sa]) => {
+      return clusterInfo.addServiceAccount(sa)
+    }))
 
-  return {
-    processArgv,
-    storeResult,
-
-    // for testing
-    _reconcileName,
-    _yargsOverrides,
-    _reifyServiceAccounts
+    await clusterInfo.registerCluster(cluster.name, {
+      cluster,
+      tokens,
+      serviceAccounts: serviceAccounts.reduce((obj, [key, sa]) => {
+        obj[key] = sa.client_email
+        return obj
+      }, {})
+    }, [cluster.environment])
   }
 
   function _reconcileName (argv, allowedSubdomains = ['npme.io']) {
@@ -118,6 +135,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     // generate cluster user/password
     common.user = common.user || 'admin'
     common.password = uuid.v4()
+
     // generate dashboard pass
     tokens.dashboardAdmin = tokens.dashboardAdmin || 'admin'
     tokens.dashboardPass = uuid.v4()
@@ -175,5 +193,23 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       }
     })
     return newData
+  }
+
+  function _removeServiceAccounts (clusterData) {
+    const serviceAccounts = []
+
+    const { cluster, tokens } = clusterData
+
+    ;[cluster, tokens].forEach(obj => Object.keys(obj).forEach(key => {
+      const val = obj[key]
+      // assume anything json-like with a client_email prop is a SA
+      if (typeof val === 'string' && val.includes('"client_email"')) {
+        const serviceAccount = JSON.parse(val)
+        serviceAccounts.push([key, serviceAccount])
+        obj[key] = serviceAccount.client_email
+      }
+    }))
+
+    return [serviceAccounts, clusterData]
   }
 }

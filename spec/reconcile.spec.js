@@ -105,7 +105,6 @@ describe('reconciler', () => {
             ...expectedCommon,
             dashboardAdmin: 'admin',
             dashboardPass: '12341234-1234-1234-1234-123412341234'
-
           }
         })
       })
@@ -196,7 +195,8 @@ describe('reconciler', () => {
         specification: '.',
         cluster: {
           ...CLUSTER_DEFAULTS,
-          ...COMMON
+          ...COMMON,
+          credendials: JSON.stringify(SERVICE_ACCOUNTS[0])
         },
         tokens: {
           ...TOKEN_DEFAULTS,
@@ -424,6 +424,68 @@ describe('reconciler', () => {
     it('should noop if no serviceAccounts', async () => {
       const result = await _reifyServiceAccounts({ foo: 'bar' })
       result.should.eql({ foo: 'bar' })
+    })
+  })
+
+  describe('storeResult', () => {
+    describe('with a bunch of info', () => {
+      let storeResult
+
+      const serviceAccountsCalls = []
+      const registerClusterCalls = []
+
+      before(() => {
+        storeResult = createReconciler(
+          {
+            async addServiceAccount (sa) {
+              serviceAccountsCalls.push(sa)
+            },
+            async registerCluster (...args) {
+              registerClusterCalls.push(args)
+            }
+          }
+        ).storeResult
+      })
+
+      it('should work', async () => {
+        const common = {
+          name: 'newcluster',
+          environment: 'production'
+        }
+        await storeResult({
+          cluster: {
+            ...CLUSTER_DEFAULTS,
+            ...common,
+            auth: JSON.stringify(SERVICE_ACCOUNTS[0])
+          },
+          tokens: {
+            ...TOKEN_DEFAULTS,
+            ...common
+          }
+        })
+
+        serviceAccountsCalls.should.eql([SERVICE_ACCOUNTS[0]])
+        registerClusterCalls.should.eql([
+          [
+            'newcluster',
+            {
+              serviceAccounts: {
+                auth: SERVICE_ACCOUNTS[0].client_email
+              },
+              cluster: {
+                auth: SERVICE_ACCOUNTS[0].client_email,
+                ...CLUSTER_DEFAULTS,
+                ...common
+              },
+              tokens: {
+                ...TOKEN_DEFAULTS,
+                ...common
+              }
+            },
+            ['production']
+          ]
+        ])
+      })
     })
   })
 })

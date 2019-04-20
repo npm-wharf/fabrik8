@@ -69,7 +69,7 @@ async function main (fabricator, debugOut, argv) {
     throw new Error('Invalid configuration for cluster-info Vault.')
   }
   const clusterInfo = createInfoClient({ redisUrl, vaultToken, vaultHost })
-  const { processArgv } = createReconciler(clusterInfo)
+  const { processArgv, storeResult } = createReconciler(clusterInfo)
 
   // reconcile options with argv
   const { kubeformSettings, hikaruSettings, specification } = await processArgv(argv)
@@ -78,7 +78,12 @@ async function main (fabricator, debugOut, argv) {
   console.log(kubeformSettings)
   console.log(specification)
   console.log(hikaruSettings)
-  // await storeResult(results)
+
+  await storeResult({
+    cluster: kubeformSettings,
+    tokens: hikaruSettings,
+    specification
+  })
   // const resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
 
   // store results in vault
