@@ -3,7 +3,8 @@ const fount = require('fount')
 const API = require('../src/api')
 
 const events = {
-  raise: () => {}
+  raise () {},
+  emit () {}
 }
 
 describe('API', function () {
@@ -389,22 +390,24 @@ describe('API', function () {
       let newSpec
       let specData
       let clusterInfo
-      let onExpectation
+      let onCalls = []
       let createExpectations
       const hikaru = {
         deployCluster: () => {}
       }
 
       before(function () {
-        onExpectation = sinon.mock('on').thrice()
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
           .resolves({ ...clusterDetail })
         class Kubeform {
           constructor () {
-            this.on = onExpectation
             this.create = createExpectations
+          }
+          on (name, cb) {
+            onCalls.push(name)
+            cb()
           }
         }
 
@@ -415,7 +418,7 @@ describe('API', function () {
         }
         hMock = sinon.mock(hikaru)
 
-        newSpec = { ...hikaruSpec, ...specData, cluster: { ...clusterDetail } }
+        newSpec = { ...specData, cluster: { ...clusterDetail } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, newSpec)
           .once()
@@ -424,8 +427,7 @@ describe('API', function () {
         clusterInfo = {
           cluster: { ...clusterDetail },
           tokens: {
-            ...specData,
-            ...options
+            ...specData
           }
         }
 
@@ -433,12 +435,17 @@ describe('API', function () {
       })
 
       it('should initialize during provisioning', function () {
-        return fabrik8.initialize(clusterConfig, specificationUrl, specData, options)
+        return fabrik8.initialize(clusterConfig, specificationUrl, specData)
           .should.eventually.eql(clusterInfo)
       })
 
       it('should call hikaru.deployCluster', function () {
         hMock.verify()
+        onCalls.should.eql([
+          'prerequisites-created',
+          'bucket-permissions-set',
+          'cluster-initialized'
+        ])
       })
     })
   })

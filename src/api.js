@@ -3,7 +3,7 @@ const log = bole('fabrik8.api')
 const fount = require('fount')
 const filterUndefined = require('./filter')
 
-const initialize = (events, Kubeform, hikaru) => async (clusterConfig, specification, data = {}, options = { data }) => {
+const initialize = (events, Kubeform, hikaru) => async (clusterConfig, specification, data, options = {}) => {
   try {
     const kubeform = new Kubeform(options)
     const initialCluster = await provisionCluster(events, kubeform, clusterConfig)
@@ -47,9 +47,9 @@ async function deploySpecification (events, hikaru, cluster, specification, data
 }
 
 function provisionCluster (events, kubeform, clusterConfig) {
-  kubeform.on('prerequisites-created', e => events.emit('cluster.prerequisites-created', e))
-  kubeform.on('bucket-permissions-set', e => events.emit('cluster.bucket-permissions-set', e))
-  kubeform.on('cluster-initialized', e => events.emit('cluster.cluster-initialized', e))
+  kubeform.on('prerequisites-created', ev => events.emit('cluster.prerequisites-created', ev))
+  kubeform.on('bucket-permissions-set', ev => events.emit('cluster.bucket-permissions-set', ev))
+  kubeform.on('cluster-initialized', ev => events.emit('cluster.cluster-initialized', ev))
   const result = kubeform.create(clusterConfig)
   return result
     .catch(e => {
