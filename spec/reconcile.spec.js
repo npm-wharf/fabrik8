@@ -53,12 +53,12 @@ describe('reconciler', () => {
       const DEFAULTS = {
         allowedSubdomains: ['npme.io', 'google.io'],
         projectPrefix: 'project-',
-        ...DEFAULT_PROPS,
-        credendials: 'my-sa@iam.google.com',
+        common: { ...DEFAULT_PROPS },
+        credentials: SERVICE_ACCOUNTS[0].client_email,
 
         serviceAccounts: {
-          service_accout: 'my-sa2@iam.google.com',
-          credendials: 'my-sa@iam.google.com'
+          service_accout: SERVICE_ACCOUNTS[1].client_email,
+          credentials: SERVICE_ACCOUNTS[0].client_email
         },
         tokens: { ...TOKEN_DEFAULTS },
         cluster: { ...CLUSTER_DEFAULTS }
@@ -86,6 +86,7 @@ describe('reconciler', () => {
       it('should process argv and get options', async () => {
         const result = await processArgv({ name: 'mycluster', specification: '.' })
         const expectedCommon = {
+          ...DEFAULTS.common,
           name: 'mycluster',
           url: 'mycluster.npme.io',
           subdomain: 'npme.io',
@@ -98,7 +99,8 @@ describe('reconciler', () => {
           specification: '.',
           kubeformSettings: {
             ...CLUSTER_DEFAULTS,
-            ...expectedCommon
+            ...expectedCommon,
+            credentials: SERVICE_ACCOUNTS[0]
           },
           hikaruSettings: {
             ...TOKEN_DEFAULTS,
@@ -114,11 +116,11 @@ describe('reconciler', () => {
       const DEFAULTS = {
         allowedSubdomains: ['npme.io', 'google.io'],
         ...DEFAULT_PROPS,
-        credendials: 'my-sa@iam.google.com',
+        credentials: SERVICE_ACCOUNTS[0].client_email,
 
         serviceAccounts: {
           service_accout: 'my-sa2@iam.google.com',
-          credendials: 'my-sa@iam.google.com'
+          credentials: SERVICE_ACCOUNTS[0].client_email
         },
         cluster: { ...CLUSTER_DEFAULTS }
       }
@@ -157,7 +159,8 @@ describe('reconciler', () => {
           specification: '.',
           kubeformSettings: {
             ...CLUSTER_DEFAULTS,
-            ...expectedCommon
+            ...expectedCommon,
+            credentials: SERVICE_ACCOUNTS[0]
           },
           hikaruSettings: {
             ...expectedCommon,
@@ -173,11 +176,11 @@ describe('reconciler', () => {
         allowedSubdomains: ['npme.io', 'google.io'],
         projectPrefix: 'project-',
         ...DEFAULT_PROPS,
-        credendials: 'my-sa@iam.google.com',
+        credentials: JSON.stringify(SERVICE_ACCOUNTS[0]),
 
         serviceAccounts: {
           service_accout: 'my-sa2@iam.google.com',
-          credendials: 'my-sa@iam.google.com'
+          credentials: SERVICE_ACCOUNTS[0].client_email
         },
         tokens: { ...TOKEN_DEFAULTS },
         cluster: { ...CLUSTER_DEFAULTS }
@@ -196,14 +199,15 @@ describe('reconciler', () => {
         cluster: {
           ...CLUSTER_DEFAULTS,
           ...COMMON,
-          credendials: JSON.stringify(SERVICE_ACCOUNTS[0])
+          credentials: SERVICE_ACCOUNTS[0].client_email
         },
         tokens: {
           ...TOKEN_DEFAULTS,
           ...COMMON,
           dashboardAdmin: 'admin',
           dashboardPass: '12341234-1234-1234-1234-123412341234'
-        }
+        },
+        credentials: SERVICE_ACCOUNTS[0].client_email
       }
       let processArgv
 
@@ -217,7 +221,8 @@ describe('reconciler', () => {
               return SERVICE_ACCOUNTS.find(json => json.client_email === email)
             },
             async getCluster (name) {
-              return STORED
+              name.should.equal('mycluster')
+              return { secretProps: STORED }
             }
           },
           {
@@ -233,8 +238,11 @@ describe('reconciler', () => {
 
         result.should.eql({
           specification: STORED.specification,
-          hikaruSettings: STORED.tokens,
-          kubeformSettings: STORED.cluster
+          kubeformSettings: {
+            ...STORED.cluster,
+            credentials: SERVICE_ACCOUNTS[0]
+          },
+          hikaruSettings: STORED.tokens
         })
       })
     })
@@ -383,18 +391,18 @@ describe('reconciler', () => {
     it('should turn service accounts into full jsons and insert them into the options', async () => {
       const result = await _reifyServiceAccounts({
         serviceAccounts: {
-          my_sa: 'my-sa@iam.google.com',
-          auth: 'my-sa2@iam.google.com'
+          my_sa: SERVICE_ACCOUNTS[0].client_email,
+          auth: SERVICE_ACCOUNTS[1].client_email
         },
         other: 'bar',
 
         common: {
-          auth: 'my-sa2@iam.google.com'
+          auth: SERVICE_ACCOUNTS[1].client_email
         },
 
-        auth: 'my-sa2@iam.google.com',
+        auth: SERVICE_ACCOUNTS[1].client_email,
         tokens: {
-          my_sa: 'my-sa@iam.google.com',
+          my_sa: SERVICE_ACCOUNTS[0].client_email,
           other: 'foo'
         }
       })
@@ -468,6 +476,7 @@ describe('reconciler', () => {
         registerClusterCalls.should.eql([
           [
             'newcluster',
+            {},
             {
               serviceAccounts: {
                 auth: SERVICE_ACCOUNTS[0].client_email

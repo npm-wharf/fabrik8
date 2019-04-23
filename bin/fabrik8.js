@@ -2,6 +2,7 @@
 
 const fabricator = require('../src/index')
 const chalk = require('chalk')
+require('dotenv').config()
 
 const levelColors = {
   debug: 'gray',

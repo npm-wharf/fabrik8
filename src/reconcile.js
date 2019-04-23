@@ -38,14 +38,21 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
 
     const commonSettings = { name, subdomain, url, projectId, environment }
 
+    // REMOVE THIS
     try {
-      var existingClusterConfig = await clusterInfo.getCluster(name)
+      await clusterInfo.unregisterCluster(name)
     } catch (e) {}
 
-    var inputSettings = existingClusterConfig
+    try {
+      var { secretProps: existingClusterConfig } = await clusterInfo.getCluster(name)
+    } catch (e) {}
+
+    var inputSettings
 
     if (!existingClusterConfig) {
-      inputSettings = _extendDefaults(commonDefaultConfig, commonSettings, argv)
+      inputSettings = _extendDefaults(commonDefaultConfig, { common: commonSettings }, argv)
+    } else {
+      inputSettings = _extendDefaults(commonDefaultConfig, existingClusterConfig, argv)
     }
 
     // fetch service accounts
@@ -60,6 +67,9 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       ...common,
       ...cluster,
       ...commonSettings
+    }
+    if (inputSettings.credentials) {
+      kubeformSettings.credentials = JSON.parse(inputSettings.credentials)
     }
 
     const hikaruSettings = {
@@ -86,7 +96,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       return clusterInfo.addServiceAccount(sa)
     }))
 
-    await clusterInfo.registerCluster(cluster.name, {
+    await clusterInfo.registerCluster(cluster.name, {}, {
       cluster,
       tokens,
       serviceAccounts: serviceAccounts.reduce((obj, [key, sa]) => {
@@ -123,14 +133,24 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     return { url, name, subdomain }
   }
 
-  function _extendDefaults (commonDefaultConfig, commonSettings, argv) {
+  function _extendDefaults (commonDefaultConfig, inputSettings, argv) {
+    const {
+      common: inputCommon,
+      cluster: inputCluster,
+      tokens: inputTokens
+    } = inputSettings
     // clone defaults
     const newSettings = JSON.parse(JSON.stringify(commonDefaultConfig))
-    const { common = {}, tokens = {} } = newSettings
+    const { common = {}, tokens = {}, cluster = {} } = newSettings
 
     // in case they don't exist
     newSettings.common = common
+    newSettings.cluster = cluster
     newSettings.tokens = tokens
+
+    Object.assign(common, inputCommon)
+    Object.assign(tokens, inputTokens)
+    Object.assign(cluster, inputCluster)
 
     // generate cluster user/password
     common.user = common.user || 'admin'
@@ -139,7 +159,6 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     // generate dashboard pass
     tokens.dashboardAdmin = tokens.dashboardAdmin || 'admin'
     tokens.dashboardPass = uuid.v4()
-
     return newSettings
   }
 
@@ -178,20 +197,22 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     const accounts = {}
     results.forEach(([key, json]) => { accounts[key] = json })
 
-    Object.keys(accounts).forEach(key => {
-      const email = accounts[key].client_email
-      if (key in newData || newData[key] === email) {
-        newData[key] = JSON.stringify(accounts[key])
-      }
-      const { common = {} } = newData
-      if (key in common || common[key] === email) {
-        common[key] = JSON.stringify(accounts[key])
-      }
-      const { tokens = {} } = newData
-      if (key in tokens || tokens[key] === email) {
-        tokens[key] = JSON.stringify(accounts[key])
-      }
-    })
+    const replaceRecursive = (obj) => {
+      Object.keys(accounts).forEach(key => {
+        const email = accounts[key].client_email
+        if (key in obj || obj[key] === email) {
+          obj[key] = JSON.stringify(accounts[key])
+        }
+
+        Object.keys(obj).map(key => obj[key]).forEach(val => {
+          if (val && typeof val === 'object' && !Array.isArray(val)) {
+            replaceRecursive(val)
+          }
+        })
+      })
+    }
+
+    replaceRecursive(newData)
     return newData
   }
 

@@ -3,11 +3,15 @@ const log = bole('fabrik8.api')
 const fount = require('fount')
 const filterUndefined = require('./filter')
 
-const initialize = (events, Kubeform, hikaru) => async (clusterConfig, specification, data, options = {}) => {
+const initialize = (events, Kubeform, hikaru) => async (kubeformParams, specification, hikaruParams, options = {}) => {
   try {
-    const kubeform = new Kubeform(options)
-    const initialCluster = await provisionCluster(events, kubeform, clusterConfig)
-    const { cluster, ...specData } = await deploySpecification(events, hikaru, initialCluster, specification, data, options)
+    const kubeformCredentials = options.credentials || kubeformParams.credentials
+    const kubeform = new Kubeform({
+      credentials: kubeformCredentials,
+      projectId: kubeformParams.projectId
+    })
+    const initialCluster = await provisionCluster(events, kubeform, kubeformParams)
+    const { cluster, ...specData } = await deploySpecification(events, hikaru, initialCluster, specification, hikaruParams, options)
     return { cluster, tokens: filterUndefined(specData) }
   } catch (e) {
     log.error(e.stack)

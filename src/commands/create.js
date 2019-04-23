@@ -75,16 +75,16 @@ async function main (fabricator, debugOut, argv) {
   const { kubeformSettings, hikaruSettings, specification } = await processArgv(argv)
   // fabrik8
 
-  console.log(kubeformSettings)
-  console.log(specification)
-  console.log(hikaruSettings)
+  // console.log(kubeformSettings)
+  // console.log(specification)
+  // console.log(hikaruSettings)
 
   await storeResult({
     cluster: kubeformSettings,
     tokens: hikaruSettings,
     specification
   })
-  // const resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
+  const resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
 
   // store results in vault
   //
