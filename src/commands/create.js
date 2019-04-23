@@ -84,10 +84,14 @@ async function main (fabricator, debugOut, argv) {
     tokens: hikaruSettings,
     specification
   })
-  const resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
+  try {
+    var resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
+  } catch (err) {
+    throw err
+  } finally {
+    await storeResult({ ...resultOpts, specification })
+  }
 
-  // store results in vault
-  //
   clusterInfo.close()
 }
 
