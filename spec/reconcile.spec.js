@@ -195,9 +195,9 @@ describe('reconciler', () => {
       }
       const COMMON = {
         name: 'mycluster',
-        url: 'mycluster.npme.io',
+        url: 'mycluster.google.io',
         domain: 'npme.io',
-        projectId: 'project-mycluster',
+        projectId: 'customprefix-mycluster',
         environment: 'production',
         user: 'admin',
         password: UUID
@@ -209,6 +209,7 @@ describe('reconciler', () => {
           ...COMMON,
           credentials: SERVICE_ACCOUNTS[0].client_email
         },
+        common: COMMON,
         tokens: {
           ...TOKEN_DEFAULTS,
           ...COMMON,
@@ -496,6 +497,7 @@ describe('reconciler', () => {
                 auth: SERVICE_ACCOUNTS[0].client_email,
                 credentials: SERVICE_ACCOUNTS[1].client_email
               },
+              common,
               cluster: {
                 auth: SERVICE_ACCOUNTS[0].client_email,
                 ...CLUSTER_DEFAULTS,

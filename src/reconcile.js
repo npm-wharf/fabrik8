@@ -27,21 +27,16 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
 
     let commonDefaultConfig = await clusterInfo.getCommon()
 
-    const {
+    let {
       name,
       domain,
       url
     } = _reconcileName(argv, commonDefaultConfig.allowedDomains)
 
     const { projectPrefix = '' } = commonDefaultConfig
-    const projectId = argv.projectId || `${projectPrefix}${name}`
+    let projectId = argv.projectId || `${projectPrefix}${name}`
 
     const commonSettings = { name, domain, url, projectId, environment }
-
-    // REMOVE THIS
-    try {
-      await clusterInfo.unregisterCluster(name)
-    } catch (e) {}
 
     try {
       var { secretProps: existingClusterConfig } = await clusterInfo.getCluster(name)
@@ -53,6 +48,8 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       inputSettings = _extendDefaults(commonDefaultConfig, { common: commonSettings }, argv)
     } else {
       inputSettings = _extendDefaults(commonDefaultConfig, existingClusterConfig, argv)
+      // there may have been different a non-default domain or project prefix
+      Object.assign(commonSettings, inputSettings.common)
     }
 
     // fetch service accounts
@@ -98,6 +95,10 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       tokens
     } = filteredOpts
 
+    const commonKeys = Object.keys(cluster).filter(key => cluster[key] === tokens[key])
+    const common = {}
+    commonKeys.forEach(key => { common[key] = cluster[key] })
+
     await Promise.all(serviceAccounts.map(async ([key, sa]) => {
       return clusterInfo.addServiceAccount(sa)
     }))
@@ -105,6 +106,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     await clusterInfo.registerCluster(cluster.name, {}, {
       cluster,
       tokens,
+      common,
       serviceAccounts: serviceAccounts.reduce((obj, [key, sa]) => {
         obj[key] = sa.client_email
         return obj
@@ -160,11 +162,11 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
 
     // generate cluster user/password
     common.user = common.user || 'admin'
-    common.password = uuid.v4()
+    common.password = common.password || uuid.v4()
 
     // generate dashboard pass
     tokens.dashboardAdmin = tokens.dashboardAdmin || 'admin'
-    tokens.dashboardPass = uuid.v4()
+    tokens.dashboardPass = tokens.dashboardPass || uuid.v4()
     return newSettings
   }
 
@@ -192,6 +194,9 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     obj[path[i]] = val
   }
 
+  // we scrub full credential objects from the cluster data before saving, so
+  // when fetching, we need to also fetch the SAs and replace the email
+  // placeholder in cluster data
   async function _reifyServiceAccounts (clusterData) {
     const { serviceAccounts = {}, ...newData } = clusterData
 
@@ -225,20 +230,24 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
   function _removeServiceAccounts (clusterData) {
     const serviceAccounts = []
 
-    const { cluster, tokens } = clusterData
+    const scrubRecursive = (obj) => {
+      Object.keys(obj).forEach(key => {
+        const val = obj[key]
+        // assume anything json-like with a client_email prop is a SA
+        if (typeof val === 'string' && val.includes('"client_email"') && val.includes('"private_key"')) {
+          const serviceAccount = JSON.parse(val)
+          serviceAccounts.push([key, serviceAccount])
+          obj[key] = serviceAccount.client_email
+        } else if (val && val.client_email && val.private_key) {
+          serviceAccounts.push([key, val])
+          obj[key] = val.client_email
+        } else if (val && typeof val === 'object' && !Array.isArray(val)) {
+          scrubRecursive(val)
+        }
+      })
+    }
 
-    ;[cluster, tokens].forEach(obj => Object.keys(obj).forEach(key => {
-      const val = obj[key]
-      // assume anything json-like with a client_email prop is a SA
-      if (typeof val === 'string' && val.includes('"client_email"')) {
-        const serviceAccount = JSON.parse(val)
-        serviceAccounts.push([key, serviceAccount])
-        obj[key] = serviceAccount.client_email
-      } else if (val && val.client_email && val.private_key) {
-        serviceAccounts.push([key, val])
-        obj[key] = val.client_email
-      }
-    }))
+    scrubRecursive(clusterData)
 
     return [serviceAccounts, clusterData]
   }
