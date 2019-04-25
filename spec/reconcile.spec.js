@@ -4,12 +4,14 @@ const createReconciler = require('../src/reconcile')
 const SERVICE_ACCOUNTS = [{
   totally: 'a',
   service: 'account-json',
-  'client_email': 'my-sa@iam.google.com'
+  private_key: 'd34db33f',
+  client_email: 'my-sa@iam.google.com'
 },
 {
   totally: 'a',
   service: 'account-json',
-  'client_email': 'my-sa2@iam.google.com'
+  private_key: 'd34db33f',
+  client_email: 'my-sa2@iam.google.com'
 }]
 const CLUSTER_DEFAULTS = {
   worker: {
@@ -180,11 +182,13 @@ describe('reconciler', () => {
         allowedDomains: ['npme.io', 'google.io'],
         projectPrefix: 'project-',
         ...DEFAULT_PROPS,
-        credentials: JSON.stringify(SERVICE_ACCOUNTS[0]),
+        credentials: SERVICE_ACCOUNTS[0].client_email,
+        applicationCredentials: SERVICE_ACCOUNTS[0].client_email,
 
         serviceAccounts: {
           service_accout: 'my-sa2@iam.google.com',
-          credentials: SERVICE_ACCOUNTS[0].client_email
+          credentials: SERVICE_ACCOUNTS[0].client_email,
+          applicationCredentials: SERVICE_ACCOUNTS[0].client_email
         },
         tokens: { ...TOKEN_DEFAULTS },
         cluster: { ...CLUSTER_DEFAULTS }
@@ -246,7 +250,8 @@ describe('reconciler', () => {
           specification: STORED.specification,
           kubeformSettings: {
             ...STORED.cluster,
-            credentials: SERVICE_ACCOUNTS[0]
+            credentials: SERVICE_ACCOUNTS[0],
+            applicationCredentials: SERVICE_ACCOUNTS[0]
           },
           hikaruSettings: {
             ...STORED.tokens
@@ -475,19 +480,21 @@ describe('reconciler', () => {
             auth: JSON.stringify(SERVICE_ACCOUNTS[0])
           },
           tokens: {
+            credentials: SERVICE_ACCOUNTS[1],
             ...TOKEN_DEFAULTS,
             ...common
           }
         })
 
-        serviceAccountsCalls.should.eql([SERVICE_ACCOUNTS[0]])
+        serviceAccountsCalls.should.eql([SERVICE_ACCOUNTS[0], SERVICE_ACCOUNTS[1]])
         registerClusterCalls.should.eql([
           [
             'newcluster',
             {},
             {
               serviceAccounts: {
-                auth: SERVICE_ACCOUNTS[0].client_email
+                auth: SERVICE_ACCOUNTS[0].client_email,
+                credentials: SERVICE_ACCOUNTS[1].client_email
               },
               cluster: {
                 auth: SERVICE_ACCOUNTS[0].client_email,
@@ -496,7 +503,8 @@ describe('reconciler', () => {
               },
               tokens: {
                 ...TOKEN_DEFAULTS,
-                ...common
+                ...common,
+                credentials: SERVICE_ACCOUNTS[1].client_email
               }
             },
             ['production']

@@ -1,5 +1,4 @@
 require('./setup')
-const fount = require('fount')
 const API = require('../src/api')
 
 const events = {
@@ -36,12 +35,6 @@ describe('API', function () {
     password: 'admin',
     url: 'https://192.168.1.1'
   }
-  let hikaruConfig
-
-  before(function () {
-    hikaruConfig = {}
-    fount.register('config', hikaruConfig)
-  })
 
   describe('when initialization fails on cluster provision', function () {
     let fabrik8
@@ -330,7 +323,7 @@ describe('API', function () {
           ...hikaruSpec,
           ...specData,
           ...options,
-          masterIP: '192.168.1.1',
+          masterIP: '192.168.1.1'
         }
       }
 
@@ -454,7 +447,7 @@ describe('API', function () {
           cluster: { ...clusterDetail },
           tokens: {
             ...specData,
-            masterIP: '192.168.1.1',
+            masterIP: '192.168.1.1'
           }
         }
 

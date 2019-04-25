@@ -1,6 +1,5 @@
 const bole = require('bole')
 const log = bole('fabrik8.api')
-const fount = require('fount')
 const filterUndefined = require('./filter')
 
 const initialize = (events, Kubeform, hikaru) => async (kubeformParams, specification, hikaruParams, options = {}) => {

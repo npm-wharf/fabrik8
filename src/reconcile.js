@@ -234,6 +234,9 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
         const serviceAccount = JSON.parse(val)
         serviceAccounts.push([key, serviceAccount])
         obj[key] = serviceAccount.client_email
+      } else if (val && val.client_email && val.private_key) {
+        serviceAccounts.push([key, val])
+        obj[key] = val.client_email
       }
     }))
 
