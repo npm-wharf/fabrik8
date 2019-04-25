@@ -31,6 +31,11 @@ describe('API', function () {
     ...options,
     ...data
   }
+  const HIKARU_AUTH = {
+    username: 'admin',
+    password: 'admin',
+    url: 'https://192.168.1.1'
+  }
   let hikaruConfig
 
   before(function () {
@@ -109,11 +114,14 @@ describe('API', function () {
         err.tokens = tokenList
         hMock = sinon.mock(hikaru)
         hMock.expects('deployCluster')
-          .withArgs(specificationUrl, {
-            ...options,
-            ...data,
-            cluster: { ...clusterDetail }
-          })
+          .withArgs(specificationUrl, { data:
+            {
+              ...options,
+              ...data,
+              masterIP: '192.168.1.1',
+              cluster: { ...clusterDetail }
+            }
+          }, HIKARU_AUTH)
           .once()
           .rejects(err)
         fabrik8 = API(events, Kubeform, hikaru)
@@ -183,13 +191,22 @@ describe('API', function () {
         err.tokens = tokenList
         hMock = sinon.mock(hikaru)
 
-        let firstArgs = { ...options, cluster: { ...clusterDetail } }
+        let firstArgs = { data: {
+          ...options,
+          masterIP: '192.168.1.1',
+          cluster: { ...clusterDetail }
+        } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, firstArgs)
           .once()
           .rejects(err)
 
-        let secondArgs = { ...hikaruSpec, ...specData, cluster: { ...clusterDetail } }
+        let secondArgs = { data: {
+          ...hikaruSpec,
+          ...specData,
+          masterIP: '192.168.1.1',
+          cluster: { ...clusterDetail }
+        } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, secondArgs)
           .once()
@@ -200,7 +217,7 @@ describe('API', function () {
           return Promise.resolve(specData)
         }
 
-        let tempSpec = { ...specData, ...options }
+        let tempSpec = { ...specData, ...options, masterIP: '192.168.1.1' }
         clusterInfo = { cluster: { ...clusterDetail }, tokens: tempSpec }
         fabrik8 = API(events, Kubeform, hikaru)
       })
@@ -312,7 +329,8 @@ describe('API', function () {
         tokens: {
           ...hikaruSpec,
           ...specData,
-          ...options
+          ...options,
+          masterIP: '192.168.1.1',
         }
       }
 
@@ -362,7 +380,11 @@ describe('API', function () {
 
         const err = new Error('something went terribly wrong')
         hMock = sinon.mock(hikaru)
-        const newSpec = { ...hikaruSpec, ...data, cluster: { ...clusterDetail } }
+        const newSpec = { data: {
+          ...hikaruSpec,
+          ...data,
+          masterIP: '192.168.1.1',
+          cluster: { ...clusterDetail } } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, newSpec)
           .once()
@@ -418,7 +440,11 @@ describe('API', function () {
         }
         hMock = sinon.mock(hikaru)
 
-        newSpec = { ...specData, cluster: { ...clusterDetail } }
+        newSpec = { data: {
+          ...specData,
+          masterIP: '192.168.1.1',
+          cluster: { ...clusterDetail }
+        } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, newSpec)
           .once()
@@ -427,7 +453,8 @@ describe('API', function () {
         clusterInfo = {
           cluster: { ...clusterDetail },
           tokens: {
-            ...specData
+            ...specData,
+            masterIP: '192.168.1.1',
           }
         }
 

@@ -29,14 +29,14 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
 
     const {
       name,
-      subdomain,
+      domain,
       url
-    } = _reconcileName(argv, commonDefaultConfig.allowedSubdomains)
+    } = _reconcileName(argv, commonDefaultConfig.allowedDomains)
 
     const { projectPrefix = '' } = commonDefaultConfig
     const projectId = argv.projectId || `${projectPrefix}${name}`
 
-    const commonSettings = { name, subdomain, url, projectId, environment }
+    const commonSettings = { name, domain, url, projectId, environment }
 
     // REMOVE THIS
     try {
@@ -61,7 +61,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     // override parameters
     inputSettings = _yargsOverrides(inputSettings, argv)
 
-    const { common, cluster, tokens } = inputSettings
+    let { common, cluster, tokens } = inputSettings
 
     const kubeformSettings = {
       ...common,
@@ -71,6 +71,12 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     if (inputSettings.credentials) {
       kubeformSettings.credentials = JSON.parse(inputSettings.credentials)
     }
+    if (inputSettings.applicationCredentials) {
+      kubeformSettings.applicationCredentials = JSON.parse(inputSettings.applicationCredentials)
+    }
+
+    // hikaru names things weird :(
+    tokens = { subdomain: name, awsZone: domain, ...tokens }
 
     const hikaruSettings = {
       ...common,
@@ -106,31 +112,31 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     }, [cluster.environment])
   }
 
-  function _reconcileName (argv, allowedSubdomains = ['npme.io']) {
+  function _reconcileName (argv, allowedDomains = ['npme.io']) {
     const {
       url: inputUrl,
       name: inputName,
-      subdomain: inputSubdomain = allowedSubdomains[0]
+      domain: inputSubdomain = allowedDomains[0]
     } = argv
 
-    let url, name, subdomain
+    let url, name, domain
 
     if (inputUrl) {
       url = inputUrl
       name = inputName || url.slice(0, url.indexOf('.'))
-      subdomain = url.slice(url.indexOf('.') + 1)
+      domain = url.slice(url.indexOf('.') + 1)
     } else {
       if (!inputName) throw new Error('Either a `name` or a `url` must be supplied.')
       name = inputName
-      subdomain = inputSubdomain
-      url = `${name}.${subdomain}`
+      domain = inputSubdomain
+      url = `${name}.${domain}`
     }
 
-    if (allowedSubdomains && !allowedSubdomains.includes(subdomain)) {
-      throw new Error(`${url} not a subdomain of ${allowedSubdomains.join(', ')}`)
+    if (allowedDomains && !allowedDomains.includes(domain)) {
+      throw new Error(`${url} not a subdomain of ${allowedDomains.join(', ')}`)
     }
 
-    return { url, name, subdomain }
+    return { url, name, domain }
   }
 
   function _extendDefaults (commonDefaultConfig, inputSettings, argv) {

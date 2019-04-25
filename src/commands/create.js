@@ -1,5 +1,6 @@
 const createInfoClient = require('@npm-wharf/cluster-info-client')
 const createReconciler = require('../reconcile')
+const bole = require('bole')
 
 function build () {
   return {
@@ -51,6 +52,11 @@ function build () {
 }
 
 function handle (fabricator, debugOut, argv) {
+  bole.output({
+    level: argv.verbose ? 'debug' : 'info',
+    stream: debugOut
+  })
+
   main(fabricator, debugOut, argv)
     .catch(err => {
       console.error(err.stack)
@@ -84,13 +90,17 @@ async function main (fabricator, debugOut, argv) {
     tokens: hikaruSettings,
     specification
   })
+
   try {
     var resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
   } catch (err) {
+    if (err.tokens) {
+      console.error(`missing tokens: ${err.tokens.sort().join()}`)
+    }
     throw err
-  } finally {
-    await storeResult({ ...resultOpts, specification })
   }
+
+  await storeResult({ ...resultOpts, specification })
 
   clusterInfo.close()
 }

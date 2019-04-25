@@ -51,7 +51,7 @@ describe('reconciler', () => {
   describe('processArgv', () => {
     describe('with full defaults', () => {
       const DEFAULTS = {
-        allowedSubdomains: ['npme.io', 'google.io'],
+        allowedDomains: ['npme.io', 'google.io'],
         projectPrefix: 'project-',
         common: { ...DEFAULT_PROPS },
         credentials: SERVICE_ACCOUNTS[0].client_email,
@@ -89,7 +89,7 @@ describe('reconciler', () => {
           ...DEFAULTS.common,
           name: 'mycluster',
           url: 'mycluster.npme.io',
-          subdomain: 'npme.io',
+          domain: 'npme.io',
           projectId: 'project-mycluster',
           environment: 'production',
           user: 'admin',
@@ -105,6 +105,8 @@ describe('reconciler', () => {
           hikaruSettings: {
             ...TOKEN_DEFAULTS,
             ...expectedCommon,
+            awsZone: expectedCommon.domain,
+            subdomain: expectedCommon.name,
             dashboardAdmin: 'admin',
             dashboardPass: '12341234-1234-1234-1234-123412341234'
           }
@@ -114,7 +116,7 @@ describe('reconciler', () => {
 
     describe('with less defaults', () => {
       const DEFAULTS = {
-        allowedSubdomains: ['npme.io', 'google.io'],
+        allowedDomains: ['npme.io', 'google.io'],
         ...DEFAULT_PROPS,
         credentials: SERVICE_ACCOUNTS[0].client_email,
 
@@ -149,7 +151,7 @@ describe('reconciler', () => {
         const expectedCommon = {
           name: 'mycluster',
           url: 'mycluster.npme.io',
-          subdomain: 'npme.io',
+          domain: 'npme.io',
           projectId: 'mycluster',
           environment: 'production',
           user: 'admin',
@@ -164,6 +166,8 @@ describe('reconciler', () => {
           },
           hikaruSettings: {
             ...expectedCommon,
+            awsZone: expectedCommon.domain,
+            subdomain: expectedCommon.name,
             dashboardAdmin: 'admin',
             dashboardPass: '12341234-1234-1234-1234-123412341234'
           }
@@ -173,7 +177,7 @@ describe('reconciler', () => {
 
     describe('with existing cluster data', () => {
       const DEFAULTS = {
-        allowedSubdomains: ['npme.io', 'google.io'],
+        allowedDomains: ['npme.io', 'google.io'],
         projectPrefix: 'project-',
         ...DEFAULT_PROPS,
         credentials: JSON.stringify(SERVICE_ACCOUNTS[0]),
@@ -188,7 +192,7 @@ describe('reconciler', () => {
       const COMMON = {
         name: 'mycluster',
         url: 'mycluster.npme.io',
-        subdomain: 'npme.io',
+        domain: 'npme.io',
         projectId: 'project-mycluster',
         environment: 'production',
         user: 'admin',
@@ -204,6 +208,8 @@ describe('reconciler', () => {
         tokens: {
           ...TOKEN_DEFAULTS,
           ...COMMON,
+          awsZone: COMMON.domain,
+          subdomain: COMMON.name,
           dashboardAdmin: 'admin',
           dashboardPass: '12341234-1234-1234-1234-123412341234'
         },
@@ -242,7 +248,9 @@ describe('reconciler', () => {
             ...STORED.cluster,
             credentials: SERVICE_ACCOUNTS[0]
           },
-          hikaruSettings: STORED.tokens
+          hikaruSettings: {
+            ...STORED.tokens
+          }
         })
       })
     })
@@ -259,7 +267,7 @@ describe('reconciler', () => {
       const result = _reconcileName({ url: 'mycluster.npme.io' })
       result.should.eql({
         name: 'mycluster',
-        subdomain: 'npme.io',
+        domain: 'npme.io',
         url: 'mycluster.npme.io'
       })
     })
@@ -272,7 +280,7 @@ describe('reconciler', () => {
       const result = _reconcileName({ url: 'mycluster.google.io' }, ['google.io'])
       result.should.eql({
         name: 'mycluster',
-        subdomain: 'google.io',
+        domain: 'google.io',
         url: 'mycluster.google.io'
       })
     })
@@ -285,16 +293,16 @@ describe('reconciler', () => {
       const result = _reconcileName({ name: 'mycluster' }, ['google.io'])
       result.should.eql({
         name: 'mycluster',
-        subdomain: 'google.io',
+        domain: 'google.io',
         url: 'mycluster.google.io'
       })
     })
 
-    it('should work with a name and subdomain', () => {
-      const result = _reconcileName({ name: 'mycluster', subdomain: 'npme.io' }, ['google.io', 'npme.io'])
+    it('should work with a name and domain', () => {
+      const result = _reconcileName({ name: 'mycluster', domain: 'npme.io' }, ['google.io', 'npme.io'])
       result.should.eql({
         name: 'mycluster',
-        subdomain: 'npme.io',
+        domain: 'npme.io',
         url: 'mycluster.npme.io'
       })
     })
@@ -305,7 +313,7 @@ describe('reconciler', () => {
         url: 'asdfasdf.npme.io' })
       result.should.eql({
         name: 'mycluster',
-        subdomain: 'npme.io',
+        domain: 'npme.io',
         url: 'asdfasdf.npme.io'
       })
     })

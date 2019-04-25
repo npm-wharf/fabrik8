@@ -5,13 +5,16 @@ const filterUndefined = require('./filter')
 
 const initialize = (events, Kubeform, hikaru) => async (kubeformParams, specification, hikaruParams, options = {}) => {
   try {
-    const kubeformCredentials = options.credentials || kubeformParams.credentials
+    const kubeformCredentials = options.applicationCredentials || kubeformParams.applicationCredentials
     const kubeform = new Kubeform({
-      credentials: kubeformCredentials,
+      applicationCredentials: kubeformCredentials,
       projectId: kubeformParams.projectId
     })
     const initialCluster = await provisionCluster(events, kubeform, kubeformParams)
-    const { cluster, ...specData } = await deploySpecification(events, hikaru, initialCluster, specification, hikaruParams, options)
+    const {
+      cluster,
+      ...specData
+    } = await deploySpecification(events, hikaru, initialCluster, specification, hikaruParams, options)
     return { cluster, tokens: filterUndefined(specData) }
   } catch (e) {
     log.error(e.stack)
@@ -27,17 +30,19 @@ async function deploySpecification (events, hikaru, cluster, specification, data
   const tokens = isCallback
     ? filteredOpts
     : { ...filteredData, ...filteredOpts }
-  const config = fount.get('config')
-  config.url = `https://${cluster.masterEndpoint}`
-  config.username = cluster.user
-  config.password = cluster.password
+
+  const config = {
+    url: `https://${cluster.masterEndpoint}`,
+    username: cluster.user,
+    password: cluster.password
+  }
   if (onCluster) {
     onCluster(tokens, cluster)
   }
   tokens.cluster = cluster
-
+  tokens.masterIP = tokens.masterIP || cluster.masterEndpoint
   try {
-    await hikaru.deployCluster(specification, tokens)
+    await hikaru.deployCluster(specification, { data: tokens }, config)
     return tokens
   } catch (e) {
     if (e.tokens && isCallback) {
@@ -64,6 +69,7 @@ function provisionCluster (events, kubeform, clusterConfig) {
 
 module.exports = (events, Kubeform, hikaru) => {
   return {
-    initialize: initialize(events, Kubeform, hikaru)
+    initialize: initialize(events, Kubeform, hikaru),
+    events
   }
 }
