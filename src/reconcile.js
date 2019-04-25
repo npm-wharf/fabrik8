@@ -89,7 +89,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
   }
 
   async function storeResult (resultOpts) {
-    const [ serviceAccounts, filteredOpts ] = _removeServiceAccounts(resultOpts)
+    const [ serviceAccounts, filteredOpts ] = _removeServiceAccounts(JSON.parse(JSON.stringify(resultOpts)))
     const {
       cluster,
       tokens

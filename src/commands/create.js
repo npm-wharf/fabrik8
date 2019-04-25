@@ -82,8 +82,8 @@ async function main (fabricator, debugOut, argv) {
   // fabrik8
 
   // console.log(kubeformSettings)
-  // console.log(specification)
   // console.log(hikaruSettings)
+  // console.log(specification)
 
   await storeResult({
     cluster: kubeformSettings,
@@ -91,8 +91,16 @@ async function main (fabricator, debugOut, argv) {
     specification
   })
 
+  const onCluster = async (tokens, cluster) => {
+    await storeResult({
+      cluster,
+      tokens,
+      specification
+    })
+  }
+
   try {
-    var resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings)
+    var resultOpts = await fabricator.initialize(kubeformSettings, specification, hikaruSettings, { onCluster })
   } catch (err) {
     if (err.tokens) {
       console.error(`missing tokens: ${err.tokens.sort().join()}`)
