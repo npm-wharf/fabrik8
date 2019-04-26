@@ -35,11 +35,14 @@ async function deploySpecification (events, hikaru, cluster, specification, data
     username: cluster.user,
     password: cluster.password
   }
+  if (cluster.credentials && !(typeof cluster.credentials === 'string')) {
+    tokens.credentials = tokens.credentials || cluster.credentials
+  }
+  tokens.masterIP = tokens.masterIP || cluster.masterEndpoint
   if (onCluster) {
     await onCluster(tokens, cluster)
   }
   tokens.cluster = cluster
-  tokens.masterIP = tokens.masterIP || cluster.masterEndpoint
   try {
     await hikaru.deployCluster(specification, { data: tokens }, config)
     return tokens

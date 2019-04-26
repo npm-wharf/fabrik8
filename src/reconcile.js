@@ -1,3 +1,4 @@
+
 module.exports = function (clusterInfo, uuid = require('uuid')) {
   return {
     processArgv,
@@ -34,9 +35,8 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     } = _reconcileName(argv, commonDefaultConfig.allowedDomains)
 
     const { projectPrefix = '' } = commonDefaultConfig
-    let projectId = argv.projectId || `${projectPrefix}${name}`
 
-    const commonSettings = { name, domain, url, projectId, environment }
+    let commonSettings = { name, domain, url, environment }
 
     try {
       var { secretProps: existingClusterConfig } = await clusterInfo.getCluster(name)
@@ -49,8 +49,11 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     } else {
       inputSettings = _extendDefaults(commonDefaultConfig, existingClusterConfig, argv)
       // there may have been different a non-default domain or project prefix
-      Object.assign(commonSettings, inputSettings.common)
+      inputSettings.common = Object.assign(commonSettings, inputSettings.common)
     }
+
+    let projectId = argv.projectId || commonSettings.projectId || `${projectPrefix}${name}`
+    inputSettings.common.projectId = projectId
 
     // fetch service accounts
     inputSettings = await _reifyServiceAccounts(inputSettings)
@@ -58,27 +61,31 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     // override parameters
     inputSettings = _yargsOverrides(inputSettings, argv)
 
-    let { common, cluster, tokens } = inputSettings
+    const { common, cluster, tokens } = inputSettings
+
+    if (typeof common.credentials === 'string') {
+      common.credentials = JSON.parse(common.credentials)
+    }
+
+    if (typeof cluster.credentials === 'string') {
+      cluster.credentials = JSON.parse(cluster.credentials)
+    }
 
     const kubeformSettings = {
       ...common,
-      ...cluster,
-      ...commonSettings
+      ...cluster
     }
-    if (inputSettings.credentials) {
-      kubeformSettings.credentials = JSON.parse(inputSettings.credentials)
-    }
+
     if (inputSettings.applicationCredentials) {
       kubeformSettings.applicationCredentials = JSON.parse(inputSettings.applicationCredentials)
     }
 
-    // hikaru names things weird :(
-    tokens = { subdomain: name, awsZone: domain, ...tokens }
-
     const hikaruSettings = {
       ...common,
-      ...tokens,
-      ...commonSettings
+      // hikaru names things weird :(
+      subdomain: name,
+      awsZone: domain,
+      ...tokens
     }
 
     return {
@@ -167,6 +174,11 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     // generate dashboard pass
     tokens.dashboardAdmin = tokens.dashboardAdmin || 'admin'
     tokens.dashboardPass = tokens.dashboardPass || uuid.v4()
+
+    newSettings.serviceAccounts = {
+      ...commonDefaultConfig.serviceAccounts,
+      ...inputSettings.serviceAccounts
+    }
     return newSettings
   }
 
@@ -221,10 +233,10 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
           }
         })
       })
+      return obj
     }
 
-    replaceRecursive(newData)
-    return newData
+    return replaceRecursive(JSON.parse(JSON.stringify(newData)))
   }
 
   function _removeServiceAccounts (clusterData) {

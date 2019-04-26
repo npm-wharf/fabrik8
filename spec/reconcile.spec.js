@@ -55,11 +55,15 @@ describe('reconciler', () => {
       const DEFAULTS = {
         allowedDomains: ['npme.io', 'google.io'],
         projectPrefix: 'project-',
-        common: { ...DEFAULT_PROPS },
-        credentials: SERVICE_ACCOUNTS[0].client_email,
+        common: {
+          ...DEFAULT_PROPS,
+          credentials: SERVICE_ACCOUNTS[0].client_email
+        },
+        applicationCredentials: SERVICE_ACCOUNTS[1].client_email,
 
         serviceAccounts: {
-          service_accout: SERVICE_ACCOUNTS[1].client_email,
+          applicationCredentials: SERVICE_ACCOUNTS[1].client_email,
+          service_account: SERVICE_ACCOUNTS[1].client_email,
           credentials: SERVICE_ACCOUNTS[0].client_email
         },
         tokens: { ...TOKEN_DEFAULTS },
@@ -102,11 +106,13 @@ describe('reconciler', () => {
           kubeformSettings: {
             ...CLUSTER_DEFAULTS,
             ...expectedCommon,
-            credentials: SERVICE_ACCOUNTS[0]
+            credentials: SERVICE_ACCOUNTS[0],
+            applicationCredentials: SERVICE_ACCOUNTS[1]
           },
           hikaruSettings: {
             ...TOKEN_DEFAULTS,
             ...expectedCommon,
+            credentials: SERVICE_ACCOUNTS[0],
             awsZone: expectedCommon.domain,
             subdomain: expectedCommon.name,
             dashboardAdmin: 'admin',
@@ -123,7 +129,8 @@ describe('reconciler', () => {
         credentials: SERVICE_ACCOUNTS[0].client_email,
 
         serviceAccounts: {
-          service_accout: 'my-sa2@iam.google.com',
+          service_account: SERVICE_ACCOUNTS[1].client_email,
+          applicationCredentials: SERVICE_ACCOUNTS[1].client_email,
           credentials: SERVICE_ACCOUNTS[0].client_email
         },
         cluster: { ...CLUSTER_DEFAULTS }
@@ -163,8 +170,7 @@ describe('reconciler', () => {
           specification: '.',
           kubeformSettings: {
             ...CLUSTER_DEFAULTS,
-            ...expectedCommon,
-            credentials: SERVICE_ACCOUNTS[0]
+            ...expectedCommon
           },
           hikaruSettings: {
             ...expectedCommon,
@@ -186,7 +192,7 @@ describe('reconciler', () => {
         applicationCredentials: SERVICE_ACCOUNTS[0].client_email,
 
         serviceAccounts: {
-          service_accout: 'my-sa2@iam.google.com',
+          service_account: SERVICE_ACCOUNTS[1].client_email,
           credentials: SERVICE_ACCOUNTS[0].client_email,
           applicationCredentials: SERVICE_ACCOUNTS[0].client_email
         },

@@ -35,6 +35,12 @@ describe('API', function () {
     password: 'admin',
     url: 'https://192.168.1.1'
   }
+  const SERVICE_ACCOUNT = {
+    totally: 'a',
+    service: 'account-json',
+    private_key: 'd34db33f',
+    client_email: 'my-sa@iam.google.com'
+  }
 
   describe('when initialization fails on cluster provision', function () {
     let fabrik8
@@ -160,7 +166,7 @@ describe('API', function () {
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
-          .resolves({ ...clusterDetail })
+          .resolves({ ...clusterDetail, credentials: SERVICE_ACCOUNT })
         class Kubeform {
           constructor () {
             this.on = onExpectation
@@ -186,8 +192,9 @@ describe('API', function () {
 
         let firstArgs = { data: {
           ...options,
+          credentials: SERVICE_ACCOUNT,
           masterIP: '192.168.1.1',
-          cluster: { ...clusterDetail }
+          cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }
         } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, firstArgs)
@@ -197,8 +204,9 @@ describe('API', function () {
         let secondArgs = { data: {
           ...hikaruSpec,
           ...specData,
+          credentials: SERVICE_ACCOUNT,
           masterIP: '192.168.1.1',
-          cluster: { ...clusterDetail }
+          cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }
         } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, secondArgs)
@@ -210,8 +218,8 @@ describe('API', function () {
           return Promise.resolve(specData)
         }
 
-        let tempSpec = { ...specData, ...options, masterIP: '192.168.1.1' }
-        clusterInfo = { cluster: { ...clusterDetail }, tokens: tempSpec }
+        let tempSpec = { ...specData, ...options, masterIP: '192.168.1.1', credentials: SERVICE_ACCOUNT }
+        clusterInfo = { cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }, tokens: tempSpec }
         fabrik8 = API(events, Kubeform, hikaru)
       })
 
