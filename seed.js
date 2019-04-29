@@ -1,6 +1,7 @@
 const createClient = require('@npm-wharf/cluster-info-client')
 const createVault = require('node-vault')
 const fs = require('fs')
+require('dotenv').config()
 
 async function main () {
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'

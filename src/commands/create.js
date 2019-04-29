@@ -1,4 +1,5 @@
 const createInfoClient = require('@npm-wharf/cluster-info-client')
+const fs = require('fs')
 const createReconciler = require('../reconcile')
 const bole = require('bole')
 
@@ -31,6 +32,10 @@ function build () {
       description: 'output verbose logging (status check output for hikaru)',
       default: false,
       boolean: true
+    },
+    output: {
+      alias: 'o',
+      description: 'the file to which to write cluster data, for debugging purposes'
     },
     redisUrl: {
       description: 'the url of the redis containing cluster information',
@@ -85,14 +90,14 @@ async function main (fabricator, debugOut, argv) {
   // console.log(hikaruSettings)
   // console.log(specification)
 
-  await storeResult({
+  await _storeResult({
     cluster: kubeformSettings,
     tokens: hikaruSettings,
     specification
   })
 
   const onCluster = async (tokens, cluster) => {
-    await storeResult({
+    await _storeResult({
       cluster,
       tokens,
       specification
@@ -108,9 +113,16 @@ async function main (fabricator, debugOut, argv) {
     throw err
   }
 
-  await storeResult({ ...resultOpts, specification })
+  await _storeResult({ ...resultOpts, specification })
 
   clusterInfo.close()
+
+  async function _storeResult (obj) {
+    await storeResult(obj)
+    if (argv.output) {
+      fs.writeFileSync(argv.output, JSON.stringify(obj, null, 2))
+    }
+  }
 }
 
 module.exports = function (fabricator, debugOut) {
