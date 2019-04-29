@@ -5,5 +5,5 @@ package-lock.json
 gs-auth.json
 gs-test-meta.js
 *cluster*.json
-seed.js
+gke-common.js
 .env
