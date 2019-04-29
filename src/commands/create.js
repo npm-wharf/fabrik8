@@ -5,14 +5,14 @@ const bole = require('bole')
 function build () {
   return {
     url: {
-      description: 'the url of the cluster you wish to create',
+      description: 'the url of the cluster you wish to create, e.g. `mycluster.example.com`',
       alias: 'u'
     },
     name: {
       description: 'the name of the cluster.  Can be inferred from the url',
       alias: 'n'
     },
-    subdomain: {
+    domain: {
       description: 'the subdomain of the cluster.  Can be inferred from the url'
     },
     projectId: {
@@ -119,7 +119,7 @@ module.exports = function (fabricator, debugOut) {
     desc: 'performs full provisioning of a Kubernetes cluster and deployment of software.\n' +
           'It will fetch defaults from a configured Vault server, and store results in Vault.\n' +
           'Defaults can be overridden as extra yargs arguments, e.g.:\n\n' +
-          '--arg-organizationId 1234567890',
+          '--arg-organizationId 1234567890 or --arg-cluster.worker.memory 26GB',
     builder: build(),
     handler: handle.bind(null, fabricator, debugOut)
   }

@@ -17,6 +17,27 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
    * will come from previous fabrik8 runs, if the cluster exists!  We also have
    * to process args that override defaults, and generate certain missing values
    * according to rules specified in the common default config.
+   *
+   * argv takes precedence over existing cluster data, which takes precedence
+   * over cluster-info defaults.
+   *
+   * Cluster info is stored roughly as
+   *
+   * {
+   *   common: {...}
+   *   cluster: {...}
+   *   tokens:  {...}
+   *   spec: '...'
+   *   serviceAccounts: {...}
+   * }
+   *
+   * `cluster` is a set of params for Kubeform, `tokens` are a set of params to
+   * use as tokens when templating the McGonagall `spec` with Hikaru, and
+   * `common` is a set of params used by both.  Service accounts is a map of
+   * keys to service account emails.  If the same `key: email` pair exists in
+   * any of the three sets of parameters, the full json  key will be fetched
+   * and used to replace the email values within the parameter sets.
+   *
    * @param  {Object} argv Yargs args
    * @return {Object}      parameters to pass to fabrik8 api
    */
@@ -95,6 +116,12 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     }
   }
 
+  /**
+   * This does roughly the inverse of processArgv, taking the result, pulling
+   * out common values and service accounts, and storing the result in vault.
+   * @param  {Object} resultOpts The results from a fabrik8 run
+   * @return {Promise}
+   */
   async function storeResult (resultOpts) {
     const [ serviceAccounts, filteredOpts ] = _removeServiceAccounts(JSON.parse(JSON.stringify(resultOpts)))
     const {
@@ -121,11 +148,14 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     }, [cluster.environment])
   }
 
+  /* helper funcs */
+
+  // figure out the name from the argv
   function _reconcileName (argv, allowedDomains = ['npme.io']) {
     const {
       url: inputUrl,
       name: inputName,
-      domain: inputSubdomain = allowedDomains[0]
+      domain: inputDomain = allowedDomains[0]
     } = argv
 
     let url, name, domain
@@ -137,7 +167,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     } else {
       if (!inputName) throw new Error('Either a `name` or a `url` must be supplied.')
       name = inputName
-      domain = inputSubdomain
+      domain = inputDomain
       url = `${name}.${domain}`
     }
 
@@ -148,6 +178,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     return { url, name, domain }
   }
 
+  // merge existing cluster data into the defaults, generate default values
   function _extendDefaults (commonDefaultConfig, inputSettings, argv) {
     const {
       common: inputCommon,
@@ -182,6 +213,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     return newSettings
   }
 
+  // handle argv overrides for values that come from cluster-info
   function _yargsOverrides (settings, argv) {
     const prefix = 'arg-'
     Object.keys(argv)
@@ -239,6 +271,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     return replaceRecursive(JSON.parse(JSON.stringify(newData)))
   }
 
+  // the inverse of _reifyServiceAccounts()
   function _removeServiceAccounts (clusterData) {
     const serviceAccounts = []
 
