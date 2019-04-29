@@ -1,9 +1,9 @@
 require('./setup')
-const fount = require('fount')
 const API = require('../src/api')
 
 const events = {
-  raise: () => {}
+  raise () {},
+  emit () {}
 }
 
 describe('API', function () {
@@ -28,14 +28,19 @@ describe('API', function () {
   }
   const hikaruSpec = {
     ...options,
-    data: { ...data }
+    ...data
   }
-  let hikaruConfig
-
-  before(function () {
-    hikaruConfig = {}
-    fount.register('config', hikaruConfig)
-  })
+  const HIKARU_AUTH = {
+    username: 'admin',
+    password: 'admin',
+    url: 'https://192.168.1.1'
+  }
+  const SERVICE_ACCOUNT = {
+    totally: 'a',
+    service: 'account-json',
+    private_key: 'd34db33f',
+    client_email: 'my-sa@iam.google.com'
+  }
 
   describe('when initialization fails on cluster provision', function () {
     let fabrik8
@@ -92,7 +97,7 @@ describe('API', function () {
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
-          .resolves(clusterDetail)
+          .resolves({ ...clusterDetail })
         class Kubeform {
           constructor () {
             this.on = onExpectation
@@ -108,10 +113,14 @@ describe('API', function () {
         err.tokens = tokenList
         hMock = sinon.mock(hikaru)
         hMock.expects('deployCluster')
-          .withArgs(specificationUrl, {
-            ...options,
-            data: { ...data, cluster: clusterDetail }
-          })
+          .withArgs(specificationUrl, { data:
+            {
+              ...options,
+              ...data,
+              masterIP: '192.168.1.1',
+              cluster: { ...clusterDetail }
+            }
+          }, HIKARU_AUTH)
           .once()
           .rejects(err)
         fabrik8 = API(events, Kubeform, hikaru)
@@ -157,7 +166,7 @@ describe('API', function () {
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
-          .resolves(clusterDetail)
+          .resolves({ ...clusterDetail, credentials: SERVICE_ACCOUNT })
         class Kubeform {
           constructor () {
             this.on = onExpectation
@@ -181,13 +190,24 @@ describe('API', function () {
         err.tokens = tokenList
         hMock = sinon.mock(hikaru)
 
-        let firstArgs = Object.assign({}, options, { data: { cluster: clusterDetail } })
+        let firstArgs = { data: {
+          ...options,
+          credentials: SERVICE_ACCOUNT,
+          masterIP: '192.168.1.1',
+          cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }
+        } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, firstArgs)
           .once()
           .rejects(err)
 
-        let secondArgs = { ...hikaruSpec, data: { ...specData, cluster: clusterDetail } }
+        let secondArgs = { data: {
+          ...hikaruSpec,
+          ...specData,
+          credentials: SERVICE_ACCOUNT,
+          masterIP: '192.168.1.1',
+          cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }
+        } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, secondArgs)
           .once()
@@ -198,8 +218,8 @@ describe('API', function () {
           return Promise.resolve(specData)
         }
 
-        let tempSpec = { data: { ...specData, cluster: clusterDetail }, ...options }
-        clusterInfo = Object.assign({}, clusterDetail, { specData: tempSpec })
+        let tempSpec = { ...specData, ...options, masterIP: '192.168.1.1', credentials: SERVICE_ACCOUNT }
+        clusterInfo = { cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }, tokens: tempSpec }
         fabrik8 = API(events, Kubeform, hikaru)
       })
 
@@ -248,7 +268,7 @@ describe('API', function () {
       createExpectations = sinon.mock('create')
         .withArgs(clusterConfig)
         .once()
-        .resolves(clusterDetail)
+        .resolves({ ...clusterDetail })
       class Kubeform {
         constructor () {
           this.on = onExpectation
@@ -272,22 +292,18 @@ describe('API', function () {
       const err = new Error('tokens are missing')
       err.tokens = tokenList
 
-      onCluster = (opts, cluster) => {
-        opts.ip = cluster.masterEndpoint
+      onCluster = (tokens, cluster) => {
+        tokens.ip = cluster.masterEndpoint
       }
 
       const firstArgs = {
         ...hikaruSpec,
-        data: {
-          cluster: { ...clusterDetail }
-        }
+        cluster: { ...clusterDetail }
       }
       const secondArgs = {
         ...hikaruSpec,
-        data: {
-          ...specData,
-          cluster: { ...clusterDetail }
-        },
+        ...specData,
+        cluster: { ...clusterDetail },
         onCluster
       }
 
@@ -310,12 +326,12 @@ describe('API', function () {
       }
 
       clusterInfo = {
-        ...clusterDetail,
-        specData: {
-          data: {
-            ...specData
-          },
-          ...options
+        cluster: { ...clusterDetail },
+        tokens: {
+          ...hikaruSpec,
+          ...specData,
+          ...options,
+          masterIP: '192.168.1.1'
         }
       }
 
@@ -355,7 +371,7 @@ describe('API', function () {
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
-          .resolves(clusterDetail)
+          .resolves({ ...clusterDetail })
         class Kubeform {
           constructor () {
             this.on = onExpectation
@@ -365,7 +381,11 @@ describe('API', function () {
 
         const err = new Error('something went terribly wrong')
         hMock = sinon.mock(hikaru)
-        const newSpec = { ...hikaruSpec, data: { ...data, cluster: clusterDetail } }
+        const newSpec = { data: {
+          ...hikaruSpec,
+          ...data,
+          masterIP: '192.168.1.1',
+          cluster: { ...clusterDetail } } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, newSpec)
           .once()
@@ -393,22 +413,24 @@ describe('API', function () {
       let newSpec
       let specData
       let clusterInfo
-      let onExpectation
+      let onCalls = []
       let createExpectations
       const hikaru = {
         deployCluster: () => {}
       }
 
       before(function () {
-        onExpectation = sinon.mock('on').thrice()
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
-          .resolves(clusterDetail)
+          .resolves({ ...clusterDetail })
         class Kubeform {
           constructor () {
-            this.on = onExpectation
             this.create = createExpectations
+          }
+          on (name, cb) {
+            onCalls.push(name)
+            cb()
           }
         }
 
@@ -419,18 +441,21 @@ describe('API', function () {
         }
         hMock = sinon.mock(hikaru)
 
-        newSpec = { ...hikaruSpec, data: { ...specData, cluster: clusterDetail } }
+        newSpec = { data: {
+          ...specData,
+          masterIP: '192.168.1.1',
+          cluster: { ...clusterDetail }
+        } }
         hMock.expects('deployCluster')
           .withArgs(specificationUrl, newSpec)
           .once()
           .resolves({})
 
-        let tempSpec = { ...specData, cluster: clusterDetail }
         clusterInfo = {
-          ...clusterDetail,
-          specData: {
-            data: tempSpec,
-            ...options
+          cluster: { ...clusterDetail },
+          tokens: {
+            ...specData,
+            masterIP: '192.168.1.1'
           }
         }
 
@@ -438,12 +463,17 @@ describe('API', function () {
       })
 
       it('should initialize during provisioning', function () {
-        return fabrik8.initialize(clusterConfig, specificationUrl, specData, options)
+        return fabrik8.initialize(clusterConfig, specificationUrl, specData)
           .should.eventually.eql(clusterInfo)
       })
 
       it('should call hikaru.deployCluster', function () {
         hMock.verify()
+        onCalls.should.eql([
+          'prerequisites-created',
+          'bucket-permissions-set',
+          'cluster-initialized'
+        ])
       })
     })
   })

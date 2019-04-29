@@ -1,14 +1,20 @@
 const bole = require('bole')
 const log = bole('fabrik8.api')
-const fount = require('fount')
 const filterUndefined = require('./filter')
 
-async function initialize (events, Kubeform, hikaru, clusterConfig, specification, data = {}, options = { data }) {
+const initialize = (events, Kubeform, hikaru) => async (kubeformParams, specification, hikaruParams, options = {}) => {
   try {
-    const kubeform = new Kubeform(options)
-    const cluster = await provisionCluster(events, kubeform, clusterConfig)
-    const specData = await deploySpecification(events, hikaru, cluster, specification, data, options)
-    return Object.assign({}, cluster, { specData: filterUndefined(specData) })
+    const kubeformCredentials = options.applicationCredentials || kubeformParams.applicationCredentials
+    const kubeform = new Kubeform({
+      applicationCredentials: kubeformCredentials,
+      projectId: kubeformParams.projectId
+    })
+    const initialCluster = await provisionCluster(events, kubeform, kubeformParams)
+    const {
+      cluster,
+      ...specData
+    } = await deploySpecification(events, hikaru, initialCluster, specification, hikaruParams, options)
+    return { cluster, tokens: filterUndefined(specData) }
   } catch (e) {
     log.error(e.stack)
     throw e
@@ -20,21 +26,26 @@ async function deploySpecification (events, hikaru, cluster, specification, data
   const onCluster = options.onCluster || data.onCluster
   const { onCluster: _0, ...filteredOpts } = options
   const { onCluster: _1, ...filteredData } = data
-  const opts = isCallback
-    ? { ...filteredOpts, data: {} }
-    : { data: filteredData, ...filteredOpts }
-  const config = fount.get('config')
-  config.url = `https://${cluster.masterEndpoint}`
-  config.username = cluster.user
-  config.password = cluster.password
-  if (onCluster) {
-    onCluster(opts.data, cluster)
-  } else {
-    opts.data.cluster = cluster
+  const tokens = isCallback
+    ? filteredOpts
+    : { ...filteredData, ...filteredOpts }
+
+  const config = {
+    url: `https://${cluster.masterEndpoint}`,
+    username: cluster.user,
+    password: cluster.password
   }
+  if (cluster.credentials && !(typeof cluster.credentials === 'string')) {
+    tokens.credentials = tokens.credentials || cluster.credentials
+  }
+  tokens.masterIP = tokens.masterIP || cluster.masterEndpoint
+  if (onCluster) {
+    await onCluster(tokens, cluster)
+  }
+  tokens.cluster = cluster
   try {
-    await hikaru.deployCluster(specification, opts)
-    return opts
+    await hikaru.deployCluster(specification, { data: tokens }, config)
+    return tokens
   } catch (e) {
     if (e.tokens && isCallback) {
       const tokenData = await data(e.tokens)
@@ -47,9 +58,9 @@ async function deploySpecification (events, hikaru, cluster, specification, data
 }
 
 function provisionCluster (events, kubeform, clusterConfig) {
-  kubeform.on('prerequisites-created', e => events.emit('cluster.prerequisites-created', e))
-  kubeform.on('bucket-permissions-set', e => events.emit('cluster.bucket-permissions-set', e))
-  kubeform.on('cluster-initialized', e => events.emit('cluster.cluster-initialized', e))
+  kubeform.on('prerequisites-created', ev => events.emit('cluster.prerequisites-created', ev))
+  kubeform.on('bucket-permissions-set', ev => events.emit('cluster.bucket-permissions-set', ev))
+  kubeform.on('cluster-initialized', ev => events.emit('cluster.cluster-initialized', ev))
   const result = kubeform.create(clusterConfig)
   return result
     .catch(e => {
@@ -58,8 +69,9 @@ function provisionCluster (events, kubeform, clusterConfig) {
     })
 }
 
-module.exports = function (events, Kubeform, hikaru) {
+module.exports = (events, Kubeform, hikaru) => {
   return {
-    initialize: initialize.bind(null, events, Kubeform, hikaru)
+    initialize: initialize(events, Kubeform, hikaru),
+    events
   }
 }
