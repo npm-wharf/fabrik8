@@ -147,7 +147,7 @@ function writeOutput (result, argv) {
 module.exports = function (fabricator, debugOut) {
   return {
     command: 'init <source> [options]',
-    desc: 'performs full provisioning of a Kubernetes cluster and deployment of software',
+    desc: '[DEPRECATED, use `create`] performs full provisioning of a Kubernetes cluster and deployment of software',
     builder: build(),
     handler: handle.bind(null, fabricator, debugOut)
   }

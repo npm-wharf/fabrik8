@@ -16,7 +16,7 @@ It works well in environments where you might want ephemeral clusters, clusters 
 
 ### What It's **Not** For
 
-`fabrik8` is not a CD solution (at least not presently). It is not meant to be run continuously against the same target (it cannot guarantee 100% idempotence). Running `fabrik8` multiple times _may_ yield unexpected results. For CD solutions, see [`hikaru`](https://github.com/npm-wharf/hikaru).
+`fabrik8` is not a CD solution (at least not presently). It is not meant to be run continuously against the same target (it cannot guarantee 100% idempotence, but makes a best effort to be). Running `fabrik8` multiple times _may_ yield unexpected results. For CD solutions, see [`hikaru`](https://github.com/npm-wharf/hikaru).
 
 ## Approach
 
@@ -35,9 +35,9 @@ As noted in `kubeform`, many of the environment variables are cloud provider spe
 
 ## API
 
-### `initiate(cluster, specification, data|onData)`
+### `initialize(cluster, specification, data|onData)`
 
-The `initiate` call requires three arguments and returns a promise.
+The `initialize` call requires three arguments and returns a promise.
 
 #### `cluster`
 
@@ -83,7 +83,31 @@ It is recommended that sensitive data (like the Kubernetes admin password) is st
 
 A CLI is also provided for `fabrik8` that allows you to invoke the API from the command line:
 
+### `fabrik8 create [--name name] [--url url] --spec ./path/to/spec`
+
+Creates a full cluster, reading defaults and existing configuration securely from centralized cluster-info.  The only options that are required are configuration for cluster-info, a name or cluster url, and the path to a McGonagall specification.  If re-running, only a name is required -- options will be re-read from cluster-info.
+
+* `--url`, `-u` the url of the cluster you wish to create,
+* `--name`, `-n` the name of the cluster.  Can be inferred from the url
+* `--subdomain` the subdomain of the cluster.  Can be inferred from the url.  Defaults to whatever is specified in the cluster-info defaults, of onyl a name is provided.
+* `--projectId` the name of the gke project to use.  Can be inferred from the cluster name
+* `--environment` the environment of the cluster, e.g. development, production
+* `--specification`, `-m`, `--spec` the path or URL to the mcgonagall specification
+* `--verbose` output verbose logging (status check output for hikaru)
+* `--redisUrl` the url of the redis containing cluster information. Can also be set through the `REDIS_URL` environment variable
+* `--vaultHost` the host of the vault server containing sensitive cluster information, auth data, and defaults. Can also be set through the `VAULT_HOST` environment variable
+* `--vaultToken` an auth token for the vault server. Can also be set through the `VAULT_TOKEN` environment variable
+* `--provider` the cloud provider to use, defaults to `KUBE_SERVICE` environment variable or `GKE`
+* `--output`, `-o` file to write cluster-info to, for debugging
+
+Values from the defaults can also be overridden as command line args, by prefixing the key with `--arg-`, e.g. `--arg-cluster.worker.memory 26GB`, or `--arg-common.zones eu-central1-a`.  Look at the cluster-info defaults for a list of values that can be overridden.
+
+Command line arguments take precedence over saved cluster-info, which take precedence over default cluster-info.  Cluster info-will be saved everytime you run `fabrik8`, so re-running `fabrik8 create` can be used to change values.
+
+
 ### `fabrik8 init ./path/to/config -a ./path/to/authFile -s ./path/to/spec -f ./path/to/data -p gke`
+
+**DEPRECATED**
 
 Similar to a blend of CLIs from its component libraries, `fabrik8` requires the following arguments:
 
