@@ -49,6 +49,14 @@ function build () {
       description: 'an auth token for the vault server',
       default: process.env.VAULT_TOKEN
     },
+    vaultRoleId: {
+      description: 'an AppRole id token for the vault server',
+      default: process.env.VAULT_ROLE_ID
+    },
+    vaultSecretId: {
+      description: 'an AppRole secret id token for the vault server',
+      default: process.env.VAULT_SECRET_ID
+    },
     provider: {
       description: 'the cloud provider to use, defaults to KUBE_SERVICE environment variable',
       default: process.env.KUBE_SERVICE || 'GKE'
@@ -74,9 +82,12 @@ async function main (fabricator, debugOut, argv) {
   const {
     redisUrl,
     vaultHost,
-    vaultToken
+    vaultToken,
+    vaultRoleId,
+    vaultSecretId
   } = argv
-  if (!redisUrl || !vaultHost || !vaultToken) {
+  const hasVaultAuth = vaultToken || (vaultRoleId && vaultSecretId)
+  if (!redisUrl || !vaultHost || !hasVaultAuth) {
     throw new Error('Invalid configuration for cluster-info Vault.')
   }
   const clusterInfo = createInfoClient({ redisUrl, vaultToken, vaultHost })
