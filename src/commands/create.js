@@ -90,7 +90,7 @@ async function main (fabricator, debugOut, argv) {
   if (!redisUrl || !vaultHost || !hasVaultAuth) {
     throw new Error('Invalid configuration for cluster-info Vault.')
   }
-  const clusterInfo = createInfoClient({ redisUrl, vaultToken, vaultHost })
+  const clusterInfo = createInfoClient({ redisUrl, vaultToken, vaultHost, vaultRoleId, vaultSecretId })
   const { processArgv, storeResult } = createReconciler(clusterInfo)
 
   // reconcile options with argv
