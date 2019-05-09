@@ -137,7 +137,9 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       return clusterInfo.addServiceAccount(sa)
     }))
 
-    await clusterInfo.registerCluster(cluster.name, {}, {
+    await clusterInfo.registerCluster(cluster.name, {
+      environment: cluster.environment
+    }, {
       cluster,
       tokens,
       common,

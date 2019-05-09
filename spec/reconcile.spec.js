@@ -497,7 +497,7 @@ describe('reconciler', () => {
         registerClusterCalls.should.eql([
           [
             'newcluster',
-            {},
+            { environment: 'production' },
             {
               serviceAccounts: {
                 auth: SERVICE_ACCOUNTS[0].client_email,
