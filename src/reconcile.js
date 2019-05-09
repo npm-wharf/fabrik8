@@ -122,7 +122,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
    * @param  {Object} resultOpts The results from a fabrik8 run
    * @return {Promise}
    */
-  async function storeResult (resultOpts) {
+  async function storeResult (resultOpts, skipServiceAccounts) {
     const [ serviceAccounts, filteredOpts ] = _removeServiceAccounts(JSON.parse(JSON.stringify(resultOpts)))
     const {
       cluster,
@@ -133,11 +133,13 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     const common = {}
     commonKeys.forEach(key => { common[key] = cluster[key] })
 
-    await Promise.all(serviceAccounts.map(async ([key, sa]) => {
-      return clusterInfo.addServiceAccount(sa)
-    }))
+    if (!skipServiceAccounts) {
+      await Promise.all(serviceAccounts.map(async ([key, sa]) => {
+        return clusterInfo.addServiceAccount(sa)
+      }))
+    }
 
-    await clusterInfo.registerCluster(cluster.name, {
+    await clusterInfo.registerCluster(tokens.name, {
       environment: cluster.environment
     }, {
       cluster,
