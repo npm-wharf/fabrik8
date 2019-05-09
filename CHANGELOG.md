@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.2.3"></a>
+## [1.2.3](https://github.com/npm-wharf/fabrik8/compare/v1.2.2...v1.2.3) (2019-05-09)
+
+
+### Bug Fixes
+
+* use tokens.name for hte vault key, cluster name might not match ([d31a643](https://github.com/npm-wharf/fabrik8/commit/d31a643))
+
+
+
 <a name="1.2.2"></a>
 ## [1.2.2](https://github.com/npm-wharf/fabrik8/compare/v1.2.1...v1.2.2) (2019-05-09)
 
