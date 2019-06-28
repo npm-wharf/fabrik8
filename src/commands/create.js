@@ -10,8 +10,11 @@ function build () {
       alias: 'u'
     },
     name: {
-      description: 'the name of the cluster.  Can be inferred from the url',
-      alias: 'n'
+      description: 'the name, or general identifier of the cluster.  Can be inferred from the url',
+      alias: ['n', 'slug']
+    },
+    clusterName: {
+      desription: 'the name of the cluster in GKE'
     },
     domain: {
       description: 'the subdomain of the cluster.  Can be inferred from the url'

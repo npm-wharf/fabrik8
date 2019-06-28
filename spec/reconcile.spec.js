@@ -107,6 +107,7 @@ describe('reconciler', () => {
           kubeformSettings: {
             ...CLUSTER_DEFAULTS,
             ...expectedCommon,
+            clusterName: 'mycluster',
             credentials: SERVICE_ACCOUNTS[0],
             applicationCredentials: SERVICE_ACCOUNTS[1]
           },
@@ -157,7 +158,7 @@ describe('reconciler', () => {
       })
 
       it('should process argv and get options', async () => {
-        const result = await processArgv({ name: 'mycluster', specification: '.' })
+        const result = await processArgv({ name: 'mycluster', clusterName: 'mycluster-01', specification: '.' })
         const expectedCommon = {
           name: 'mycluster',
           slug: 'mycluster',
@@ -172,7 +173,8 @@ describe('reconciler', () => {
           specification: '.',
           kubeformSettings: {
             ...CLUSTER_DEFAULTS,
-            ...expectedCommon
+            ...expectedCommon,
+            clusterName: 'mycluster-01'
           },
           hikaruSettings: {
             ...expectedCommon,
@@ -206,6 +208,7 @@ describe('reconciler', () => {
         slug: 'mycluster',
         url: 'mycluster.google.io',
         domain: 'npme.io',
+        clusterName: 'mycluster',
         projectId: 'customprefix-mycluster',
         environment: 'production',
         user: 'admin',

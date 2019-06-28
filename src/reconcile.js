@@ -45,9 +45,10 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
    * @return {Object}      parameters to pass to fabrik8 api
    */
   async function processArgv (argv) {
-    const {
+    let {
       environment = 'production',
-      specification
+      specification,
+      clusterName
     } = argv
 
     let commonDefaultConfig = await clusterInfo.getCommon()
@@ -96,9 +97,12 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       cluster.credentials = JSON.parse(cluster.credentials)
     }
 
+    clusterName = clusterName || name
+
     const kubeformSettings = {
       ...common,
-      ...cluster
+      ...cluster,
+      clusterName
     }
 
     if (inputSettings.applicationCredentials) {
