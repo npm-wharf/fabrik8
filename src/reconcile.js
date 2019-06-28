@@ -1,3 +1,6 @@
+const Ajv = require('ajv')
+const ajv = new Ajv()
+const validate = ajv.compile(require('@npm-wharf/cluster-info-client/schema.json'))
 
 module.exports = function (clusterInfo, uuid = require('uuid')) {
   return {
@@ -51,13 +54,14 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
 
     let {
       name,
+      slug = name,
       domain,
       url
     } = _reconcileName(argv, commonDefaultConfig.allowedDomains)
 
     const { projectPrefix = '' } = commonDefaultConfig
 
-    let commonSettings = { name, domain, url, environment }
+    let commonSettings = { slug, name, domain, url, environment }
 
     try {
       var { secretProps: existingClusterConfig } = await clusterInfo.getCluster(name)
@@ -126,7 +130,8 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     const [ serviceAccounts, filteredOpts ] = _removeServiceAccounts(JSON.parse(JSON.stringify(resultOpts)))
     const {
       cluster,
-      tokens
+      tokens,
+      specification
     } = filteredOpts
 
     const commonKeys = Object.keys(cluster).filter(key => cluster[key] === tokens[key])
@@ -139,17 +144,23 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       }))
     }
 
-    await clusterInfo.registerCluster(tokens.name, {
-      environment: cluster.environment
-    }, {
+    const secretProps = {
       cluster,
       tokens,
       common,
+      spec: specification,
       serviceAccounts: serviceAccounts.reduce((obj, [key, sa]) => {
         obj[key] = sa.client_email
         return obj
       }, {})
-    }, [cluster.environment])
+    }
+
+    const valid = validate(secretProps)
+    if (!valid) throw new Error('data invalid:\n' + JSON.stringify(validate.errors, null, 2))
+
+    await clusterInfo.registerCluster(tokens.name, {
+      environment: cluster.environment
+    }, secretProps, [cluster.environment])
   }
 
   /* helper funcs */

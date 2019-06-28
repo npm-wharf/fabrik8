@@ -94,6 +94,7 @@ describe('reconciler', () => {
         const expectedCommon = {
           ...DEFAULTS.common,
           name: 'mycluster',
+          slug: 'mycluster',
           url: 'mycluster.npme.io',
           domain: 'npme.io',
           projectId: 'project-mycluster',
@@ -159,6 +160,7 @@ describe('reconciler', () => {
         const result = await processArgv({ name: 'mycluster', specification: '.' })
         const expectedCommon = {
           name: 'mycluster',
+          slug: 'mycluster',
           url: 'mycluster.npme.io',
           domain: 'npme.io',
           projectId: 'mycluster',
@@ -201,6 +203,7 @@ describe('reconciler', () => {
       }
       const COMMON = {
         name: 'mycluster',
+        slug: 'mycluster',
         url: 'mycluster.google.io',
         domain: 'npme.io',
         projectId: 'customprefix-mycluster',
@@ -477,7 +480,12 @@ describe('reconciler', () => {
 
       it('should work', async () => {
         const common = {
+          projectId: 'myproject',
+          username: 'admin',
+          password: 'hunter2',
+          slug: 'newcluster',
           name: 'newcluster',
+          url: 'newcluster.npme.io',
           environment: 'production'
         }
         await storeResult({
@@ -490,7 +498,8 @@ describe('reconciler', () => {
             credentials: SERVICE_ACCOUNTS[1],
             ...TOKEN_DEFAULTS,
             ...common
-          }
+          },
+          specification: '.'
         })
 
         serviceAccountsCalls.should.eql([SERVICE_ACCOUNTS[0], SERVICE_ACCOUNTS[1]])
@@ -503,6 +512,7 @@ describe('reconciler', () => {
                 auth: SERVICE_ACCOUNTS[0].client_email,
                 credentials: SERVICE_ACCOUNTS[1].client_email
               },
+              spec: '.',
               common,
               cluster: {
                 auth: SERVICE_ACCOUNTS[0].client_email,
