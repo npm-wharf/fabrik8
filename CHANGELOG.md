@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.3.0"></a>
+# [1.3.0](https://github.com/npm-wharf/fabrik8/compare/v1.2.3...v1.3.0) (2019-06-29)
+
+
+### Features
+
+* add configuration to seed script ([7055901](https://github.com/npm-wharf/fabrik8/commit/7055901))
+* add slug to saved parameters, add schema validation ([64d5358](https://github.com/npm-wharf/fabrik8/commit/64d5358))
+* allow setting a clusterName distinct from the name ([b047b36](https://github.com/npm-wharf/fabrik8/commit/b047b36))
+
+
+
 <a name="1.2.3"></a>
 ## [1.2.3](https://github.com/npm-wharf/fabrik8/compare/v1.2.2...v1.2.3) (2019-05-09)
 
