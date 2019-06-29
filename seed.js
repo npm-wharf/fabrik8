@@ -1,5 +1,6 @@
 const createClient = require('@npm-wharf/cluster-info-client')
 const createVault = require('node-vault')
+const path = require('path')
 const fs = require('fs')
 require('dotenv').config()
 
@@ -7,12 +8,14 @@ async function main () {
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
   const vaultHost = process.env.VAULT_HOST || 'https://your.vault.server:8200'
   const vaultToken = process.env.VAULT_TOKEN || 's.myVaultToken'
+  const vaultPrefix = process.env.VAULT_SECRET_PREFIX || 'kv/'
+  const gkeDefaultsPath = process.env.GKE_DEFAULTS_PATH || './gke-common'
 
   const client = createClient({
     redisUrl,
     vaultHost,
     vaultToken,
-    vaultPrefix: 'kv/'
+    vaultPrefix
   })
 
   const vault = createVault({
@@ -105,10 +108,10 @@ async function main () {
   }
 
   try {
-    var gkeCommonData = require('./gke-common')
+    var gkeCommonData = require(path.join(process.cwd(), gkeDefaultsPath))
   } catch (e) {}
 
-  await vault.write('kv/data/clusters/common/gke', {
+  await vault.write(vaultPrefix + 'data/clusters/common/gke', {
     data: {
       value: JSON.stringify(gkeCommonData || exampleGkeCommonData, null, 2)
     }
