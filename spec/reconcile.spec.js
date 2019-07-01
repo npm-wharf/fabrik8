@@ -368,7 +368,7 @@ describe('reconciler', () => {
         }
       }
       const argv = {
-        'arg-a': 2,
+        'arg-a': 'a',
         'arg-tokens.e': 2,
         'arg-cluster.g.h': 2
       }
@@ -376,7 +376,7 @@ describe('reconciler', () => {
 
       result.should.eql({
         common: {
-          a: 2,
+          a: 'a',
           b: 1,
           c: {
             d: 1
@@ -390,6 +390,24 @@ describe('reconciler', () => {
           g: {
             h: 2
           }
+        }
+      })
+    })
+
+    it('should override complete objects and arrays', async () => {
+      const input = {
+        common: {
+          a: 1
+        }
+      }
+      const argv = {
+        'arg-a': '["a"]'
+      }
+      const result = _yargsOverrides(input, argv)
+
+      result.should.eql({
+        common: {
+          a: [ 'a' ]
         }
       })
     })
