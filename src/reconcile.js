@@ -254,7 +254,11 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       obj = obj[path[i]]
       if (!obj) return
     }
-    obj[path[i]] = val
+    try {
+      obj[path[i]] = JSON.parse(val)
+    } catch (e) {
+      obj[path[i]] = val
+    }
   }
 
   // we scrub full credential objects from the cluster data before saving, so
