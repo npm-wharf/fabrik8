@@ -65,7 +65,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     let commonSettings = { slug, name, domain, url, environment }
 
     try {
-      var { secretProps: existingClusterConfig } = await clusterInfo.getCluster(name)
+      var { props: existingClusterConfig } = await clusterInfo.getCluster(name)
     } catch (e) {}
 
     var inputSettings
@@ -138,6 +138,8 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       specification
     } = filteredOpts
 
+    const { environment = 'production' } = cluster
+
     const commonKeys = Object.keys(cluster).filter(key => cluster[key] === tokens[key])
     const common = {}
     commonKeys.forEach(key => { common[key] = cluster[key] })
@@ -152,6 +154,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
       cluster,
       tokens,
       common,
+      environment,
       spec: specification,
       serviceAccounts: serviceAccounts.reduce((obj, [key, sa]) => {
         obj[key] = sa.client_email
@@ -162,9 +165,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     const valid = validate(secretProps)
     if (!valid) throw new Error('data invalid:\n' + JSON.stringify(validate.errors, null, 2))
 
-    await clusterInfo.registerCluster(tokens.name, {
-      environment: cluster.environment
-    }, secretProps, [cluster.environment])
+    await clusterInfo.registerCluster(tokens.name, environment, secretProps, [environment])
   }
 
   /* helper funcs */
