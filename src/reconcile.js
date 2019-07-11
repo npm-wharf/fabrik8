@@ -165,7 +165,7 @@ module.exports = function (clusterInfo, uuid = require('uuid')) {
     const valid = validate(secretProps)
     if (!valid) throw new Error('data invalid:\n' + JSON.stringify(validate.errors, null, 2))
 
-    await clusterInfo.registerCluster(tokens.name, environment, secretProps, [environment])
+    await clusterInfo.registerCluster(tokens.slug, environment, secretProps, [environment])
   }
 
   /* helper funcs */

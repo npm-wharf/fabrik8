@@ -40,10 +40,6 @@ function build () {
       alias: 'o',
       description: 'the file to which to write cluster data, for debugging purposes'
     },
-    redisUrl: {
-      description: 'the url of the redis containing cluster information',
-      default: process.env.REDIS_URL || 'redis://localhost:6379'
-    },
     vaultHost: {
       description: 'the host of the vault server containing sensitive cluster information, auth data, and defaults',
       default: process.env.VAULT_HOST
@@ -59,6 +55,10 @@ function build () {
     vaultSecretId: {
       description: 'an AppRole secret id token for the vault server',
       default: process.env.VAULT_SECRET_ID
+    },
+    vaultSecretPrefix: {
+      description: 'the prefix for the KV secrets engine',
+      default: process.env.VAULT_SECRET_PREFIX || 'kv/'
     },
     provider: {
       description: 'the cloud provider to use, defaults to KUBE_SERVICE environment variable',

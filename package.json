@@ -43,7 +43,7 @@
     "standard-version": "^6.0.1"
   },
   "dependencies": {
-    "@npm-wharf/cluster-info-client": "^2.0.0",
+    "@npm-wharf/cluster-info-client": "^2.0.1",
     "@npm-wharf/hikaru": "^2.0.0",
     "@npm-wharf/kubeform": "^1.4.4",
     "ajv": "^6.10.0",
