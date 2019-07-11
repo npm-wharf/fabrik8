@@ -1,6 +1,20 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [1.4.0](https://github.com/npm-wharf/fabrik8/compare/v1.3.0...v1.4.0) (2019-07-11)
+
+
+### Bug Fixes
+
+* update CLI args for cluster-info-client.  closes [#5](https://github.com/npm-wharf/fabrik8/issues/5) ([e3e2b83](https://github.com/npm-wharf/fabrik8/commit/e3e2b83))
+
+
+### Features
+
+* **cli:** added fabrik8 cli override complete nested objects and arrays ([7e20d89](https://github.com/npm-wharf/fabrik8/commit/7e20d89))
+
+
 
 <a name="1.3.0"></a>
 # [1.3.0](https://github.com/npm-wharf/fabrik8/compare/v1.2.3...v1.3.0) (2019-06-29)
