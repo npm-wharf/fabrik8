@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const fabricator = require('../src/index')
+const fabricator = require('../lib/index')
 const chalk = require('chalk')
 require('dotenv').config()
 
@@ -21,8 +21,8 @@ const debugOut = {
 
 require('yargs') // eslint-disable-line no-unused-expressions
   .usage('$0 <command> [options]')
-  .command(require('../src/commands/init')(fabricator, debugOut))
-  .command(require('../src/commands/create')(fabricator, debugOut))
+  .command(require('../lib/commands/init')(fabricator, debugOut))
+  .command(require('../lib/commands/create')(fabricator, debugOut))
   .demandCommand(1, 'A command is required.')
   .help()
   .version()

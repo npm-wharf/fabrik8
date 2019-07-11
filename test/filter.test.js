@@ -1,5 +1,5 @@
 require('./setup')
-const filterUndefined = require('../src/filter')
+const filterUndefined = require('../lib/filter')
 
 describe('filterUndefined', () => {
   it('should filter undefined values from an object tree', () => {

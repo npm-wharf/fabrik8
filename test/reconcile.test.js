@@ -1,5 +1,5 @@
 require('./setup')
-const createReconciler = require('../src/reconcile')
+const createReconciler = require('../lib/reconcile')
 
 const SERVICE_ACCOUNTS = [{
   totally: 'a',

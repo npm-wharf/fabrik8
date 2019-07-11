@@ -2,16 +2,16 @@
   "name": "@npm-wharf/fabrik8",
   "version": "1.3.0",
   "description": "provision a new Kubernetes cluster and deploy software to it from a single API",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "bin": {
     "fabrik8": "bin/fabrik8.js"
   },
   "scripts": {
     "lint": "standard --fix",
     "pretest": "standard",
-    "test": "mocha spec/**/*.spec.js",
+    "test": "mocha test/**/*.test.js",
     "coverage": "nyc npm test",
-    "continuous": "mocha spec/*.spec.js -w",
+    "continuous": "mocha test/*.test.js -w",
     "release": "standard-version",
     "standard": "standard --fix"
   },

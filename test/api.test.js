@@ -1,5 +1,5 @@
 require('./setup')
-const API = require('../src/api')
+const API = require('../lib/api')
 
 const events = {
   raise () {},
