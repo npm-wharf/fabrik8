@@ -245,7 +245,7 @@ describe('reconciler', () => {
             },
             async getCluster (name) {
               name.should.equal('mycluster')
-              return { secretProps: STORED }
+              return { props: STORED }
             }
           },
           {
@@ -527,13 +527,14 @@ describe('reconciler', () => {
         registerClusterCalls.should.eql([
           [
             'newcluster',
-            { environment: 'production' },
+            'production',
             {
               serviceAccounts: {
                 auth: SERVICE_ACCOUNTS[0].client_email,
                 credentials: SERVICE_ACCOUNTS[1].client_email
               },
               spec: '.',
+              environment: 'production',
               common,
               cluster: {
                 auth: SERVICE_ACCOUNTS[0].client_email,
