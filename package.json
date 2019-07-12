@@ -31,7 +31,6 @@
   },
   "homepage": "https://github.com/npm-wharf/fabrik8#readme",
   "devDependencies": {
-    "bole": "^3.0.2",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "coveralls": "^3.0.2",
@@ -47,7 +46,7 @@
     "@npm-wharf/hikaru": "^2.0.0",
     "@npm-wharf/kubeform": "^1.4.4",
     "ajv": "^6.10.0",
-    "bluebird": "^3.5.2",
+    "bole": "^3.0.2",
     "chalk": "^2.4.1",
     "dotenv": "^7.0.0",
     "fauxdash": "^1.4.0",
