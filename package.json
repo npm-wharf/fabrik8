@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@npm-wharf/cluster-info-client": "^2.0.2",
-    "@npm-wharf/hikaru": "^2.0.0",
+    "@npm-wharf/hikaru": "^1.16.0",
     "@npm-wharf/kubeform": "^1.4.4",
     "ajv": "^6.10.0",
     "bole": "^3.0.2",

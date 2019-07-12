@@ -502,7 +502,7 @@ describe('reconciler', () => {
       it('should work', async () => {
         const common = {
           projectId: 'myproject',
-          username: 'admin',
+          user: 'admin',
           password: 'hunter2',
           slug: 'newcluster',
           name: 'newcluster',
