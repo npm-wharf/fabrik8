@@ -94,7 +94,6 @@ Creates a full cluster, reading defaults and existing configuration securely fro
 * `--environment` the environment of the cluster, e.g. development, production
 * `--specification`, `-m`, `--spec` the path or URL to the mcgonagall specification
 * `--verbose` output verbose logging (status check output for hikaru)
-* `--redisUrl` the url of the redis containing cluster information. Can also be set through the `REDIS_URL` environment variable
 * `--vaultHost` the host of the vault server containing sensitive cluster information, auth data, and defaults. Can also be set through the `VAULT_HOST` environment variable
 * `--vaultToken` an auth token for the vault server. Can also be set through the `VAULT_TOKEN` environment variable
 * `--provider` the cloud provider to use, defaults to `KUBE_SERVICE` environment variable or `GKE`
