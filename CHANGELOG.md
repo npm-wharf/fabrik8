@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.1](https://github.com/npm-wharf/fabrik8/compare/v1.5.0...v1.5.1) (2019-07-13)
+
+
+### Bug Fixes
+
+* bistre output ([05d8d5e](https://github.com/npm-wharf/fabrik8/commit/05d8d5e))
+* update kubeform ([9afe558](https://github.com/npm-wharf/fabrik8/commit/9afe558))
+
+
+
 ## [1.5.0](https://github.com/npm-wharf/fabrik8/compare/v1.4.2...v1.5.0) (2019-07-13)
 
 
