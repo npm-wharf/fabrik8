@@ -46,6 +46,7 @@
     "@npm-wharf/hikaru": "^1.16.0",
     "@npm-wharf/kubeform": "^1.4.4",
     "ajv": "^6.10.0",
+    "bistre": "^1.0.1",
     "bole": "^3.0.2",
     "chalk": "^2.4.1",
     "dotenv": "^7.0.0",
