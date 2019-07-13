@@ -43,6 +43,7 @@ const DEFAULT_PROPS = {
   billingAccount: '234523452345',
   organizationId: '123412341234',
   user: 'admin',
+  password: '{{ uuid() }}',
   version: '1.10.11-gke.1',
   basicAuth: true,
   zones: ['us-central1-a']
@@ -54,7 +55,6 @@ describe('reconciler', () => {
     describe('with full defaults', () => {
       const DEFAULTS = {
         allowedDomains: ['npme.io', 'google.io'],
-        projectPrefix: 'project-',
         common: {
           ...DEFAULT_PROPS,
           credentials: SERVICE_ACCOUNTS[0].client_email
@@ -97,7 +97,7 @@ describe('reconciler', () => {
           slug: 'mycluster',
           url: 'mycluster.npme.io',
           domain: 'npme.io',
-          projectId: 'project-mycluster',
+          projectId: 'mycluster',
           environment: 'production',
           user: 'admin',
           password: UUID
@@ -116,11 +116,61 @@ describe('reconciler', () => {
             ...expectedCommon,
             credentials: SERVICE_ACCOUNTS[0],
             awsZone: expectedCommon.domain,
-            subdomain: expectedCommon.name,
-            dashboardAdmin: 'admin',
-            dashboardPass: '12341234-1234-1234-1234-123412341234'
+            subdomain: expectedCommon.name
           }
         })
+      })
+    })
+
+    describe('with templated defaults', () => {
+      const DEFAULTS = {
+        allowedDomains: ['npme.io', 'google.io'],
+        common: {
+          ...DEFAULT_PROPS,
+          projectId: 'asdf-{{ slug }}',
+          password: '{{ uuid() }}',
+          credentials: SERVICE_ACCOUNTS[0].client_email
+        },
+        applicationCredentials: SERVICE_ACCOUNTS[1].client_email,
+
+        serviceAccounts: {
+          applicationCredentials: SERVICE_ACCOUNTS[1].client_email,
+          service_account: SERVICE_ACCOUNTS[1].client_email,
+          credentials: SERVICE_ACCOUNTS[0].client_email
+        },
+        tokens: {
+          ...TOKEN_DEFAULTS,
+          secretSalt: '{{ randomBytes() }}'
+        },
+        cluster: { ...CLUSTER_DEFAULTS }
+      }
+      let processArgv
+
+      before(() => {
+        processArgv = createReconciler(
+          {
+            async getCommon () {
+              return DEFAULTS
+            },
+            async getServiceAccount (email) {
+              return SERVICE_ACCOUNTS.find(json => json.client_email === email)
+            }
+          },
+          {
+            v4 () {
+              return UUID
+            }
+          }
+        ).processArgv
+      })
+
+      it('should process argv and get options', async () => {
+        const result = await processArgv({ name: 'mycluster', specification: '.' })
+        const { kubeformSettings, hikaruSettings } = result
+        kubeformSettings.password.should.match(/[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}/i)
+        hikaruSettings.secretSalt.should.match(/[0-9a-f]{64}/i)
+        kubeformSettings.projectId.should.equal('asdf-mycluster')
+        hikaruSettings.projectId.should.equal('asdf-mycluster')
       })
     })
 
@@ -165,9 +215,7 @@ describe('reconciler', () => {
           url: 'mycluster.npme.io',
           domain: 'npme.io',
           projectId: 'mycluster',
-          environment: 'production',
-          user: 'admin',
-          password: UUID
+          environment: 'production'
         }
         result.should.eql({
           specification: '.',
@@ -179,9 +227,7 @@ describe('reconciler', () => {
           hikaruSettings: {
             ...expectedCommon,
             awsZone: expectedCommon.domain,
-            subdomain: expectedCommon.name,
-            dashboardAdmin: 'admin',
-            dashboardPass: '12341234-1234-1234-1234-123412341234'
+            subdomain: expectedCommon.name
           }
         })
       })
@@ -190,7 +236,6 @@ describe('reconciler', () => {
     describe('with existing cluster data', () => {
       const DEFAULTS = {
         allowedDomains: ['npme.io', 'google.io'],
-        projectPrefix: 'project-',
         ...DEFAULT_PROPS,
         credentials: SERVICE_ACCOUNTS[0].client_email,
         applicationCredentials: SERVICE_ACCOUNTS[0].client_email,
@@ -208,8 +253,7 @@ describe('reconciler', () => {
         slug: 'mycluster',
         url: 'mycluster.google.io',
         domain: 'npme.io',
-        clusterName: 'mycluster',
-        projectId: 'customprefix-mycluster',
+        projectId: 'mycluster',
         environment: 'production',
         user: 'admin',
         password: UUID
@@ -219,6 +263,7 @@ describe('reconciler', () => {
         cluster: {
           ...CLUSTER_DEFAULTS,
           ...COMMON,
+          clusterName: 'mycluster',
           credentials: SERVICE_ACCOUNTS[0].client_email
         },
         common: COMMON,
@@ -226,9 +271,7 @@ describe('reconciler', () => {
           ...TOKEN_DEFAULTS,
           ...COMMON,
           awsZone: COMMON.domain,
-          subdomain: COMMON.name,
-          dashboardAdmin: 'admin',
-          dashboardPass: '12341234-1234-1234-1234-123412341234'
+          subdomain: COMMON.name
         },
         credentials: SERVICE_ACCOUNTS[0].client_email
       }
@@ -245,7 +288,7 @@ describe('reconciler', () => {
             },
             async getCluster (name) {
               name.should.equal('mycluster')
-              return { props: STORED }
+              return { value: STORED }
             }
           },
           {
