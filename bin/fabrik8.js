@@ -2,6 +2,8 @@
 
 const fabricator = require('../lib/index')
 const bistre = require('bistre')()
+bistre.pipe(process.stdout)
+
 require('dotenv').config()
 
 require('yargs') // eslint-disable-line no-unused-expressions
