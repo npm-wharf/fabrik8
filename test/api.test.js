@@ -150,9 +150,6 @@ describe('API', function () {
     describe('and deploy succeeds', function () {
       let hMock
       let fabrik8
-      let tokenList
-      let getData
-      let errorList
       let specData
       let clusterInfo
       let onExpectation
@@ -174,34 +171,15 @@ describe('API', function () {
           }
         }
 
-        tokenList = [
-          'token1',
-          'token2',
-          'token3'
-        ]
-
         specData = {
           token1: 'e',
           token2: 'f',
           token3: 'g'
         }
 
-        const err = new Error('tokens are missing')
-        err.tokens = tokenList
         hMock = sinon.mock(hikaru)
 
-        let firstArgs = { data: {
-          ...options,
-          credentials: SERVICE_ACCOUNT,
-          masterIP: '192.168.1.1',
-          cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }
-        } }
-        hMock.expects('deployCluster')
-          .withArgs(specificationUrl, firstArgs)
-          .once()
-          .rejects(err)
-
-        let secondArgs = { data: {
+        let args = { data: {
           ...hikaruSpec,
           ...specData,
           credentials: SERVICE_ACCOUNT,
@@ -209,14 +187,9 @@ describe('API', function () {
           cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }
         } }
         hMock.expects('deployCluster')
-          .withArgs(specificationUrl, secondArgs)
+          .withArgs(specificationUrl, args)
           .once()
           .resolves({})
-
-        getData = (tokens) => {
-          errorList = tokens
-          return Promise.resolve(specData)
-        }
 
         let tempSpec = { ...specData, ...options, masterIP: '192.168.1.1', credentials: SERVICE_ACCOUNT }
         clusterInfo = { cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }, tokens: tempSpec }
@@ -224,12 +197,8 @@ describe('API', function () {
       })
 
       it('should initialize during provisioning', function () {
-        return fabrik8.initialize(clusterConfig, specificationUrl, getData, options)
+        return fabrik8.initialize(clusterConfig, specificationUrl, specData, options)
           .should.eventually.eql(clusterInfo)
-      })
-
-      it('should have returned missing tokens', function () {
-        errorList.should.eql(tokenList)
       })
 
       it('should call on to subscribe to events', function () {
@@ -251,10 +220,8 @@ describe('API', function () {
 
   describe('when tokens come from cluster detail', function () {
     let fabrik8
-    let tokenList
-    let getData
-    let errorList
     let specData
+    let data
     let clusterInfo
     let onCluster
     let onExpectation
@@ -276,12 +243,6 @@ describe('API', function () {
         }
       }
 
-      tokenList = [
-        'token1',
-        'token2',
-        'token3'
-      ]
-
       specData = {
         token1: 'e',
         token2: 'f',
@@ -289,18 +250,11 @@ describe('API', function () {
         ip: '192.168.1.1'
       }
 
-      const err = new Error('tokens are missing')
-      err.tokens = tokenList
-
       onCluster = (tokens, cluster) => {
         tokens.ip = cluster.masterEndpoint
       }
 
-      const firstArgs = {
-        ...hikaruSpec,
-        cluster: { ...clusterDetail }
-      }
-      const secondArgs = {
+      const args = {
         ...hikaruSpec,
         ...specData,
         cluster: { ...clusterDetail },
@@ -308,21 +262,14 @@ describe('API', function () {
       }
 
       hikaru.deployCluster = sinon.stub()
-        .withArgs(specificationUrl, secondArgs)
-        .onCall(1)
+        .withArgs(specificationUrl, args)
         .resolves({})
-        .withArgs(specificationUrl, firstArgs)
-        .onCall(0)
-        .rejects(err)
 
-      getData = (tokens) => {
-        errorList = tokens
-        return Promise.resolve({
-          onCluster,
-          token1: 'e',
-          token2: 'f',
-          token3: 'g'
-        })
+      data = {
+        onCluster,
+        token1: 'e',
+        token2: 'f',
+        token3: 'g'
       }
 
       clusterInfo = {
@@ -339,12 +286,8 @@ describe('API', function () {
     })
 
     it('should initialize during provisioning', function () {
-      return fabrik8.initialize(clusterConfig, specificationUrl, getData, options)
+      return fabrik8.initialize(clusterConfig, specificationUrl, data, options)
         .should.eventually.eql(clusterInfo)
-    })
-
-    it('should have returned missing tokens', function () {
-      errorList.should.eql(tokenList)
     })
 
     it('should call on to subscribe to events', function () {
