@@ -1,6 +1,6 @@
 {
   "name": "@npm-wharf/fabrik8",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "provision a new Kubernetes cluster and deploy software to it from a single API",
   "main": "lib/index.js",
   "bin": {

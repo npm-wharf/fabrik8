@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/npm-wharf/fabrik8/compare/v1.4.2...v1.5.0) (2019-07-13)
+
+
+### Bug Fixes
+
+* update cluster-info-client ([dbae982](https://github.com/npm-wharf/fabrik8/commit/dbae982))
+
+
+### Features
+
+* add nunjucks templating for values ([5443153](https://github.com/npm-wharf/fabrik8/commit/5443153))
+
+
+
 ### [1.4.2](https://github.com/npm-wharf/fabrik8/compare/v1.4.1...v1.4.2) (2019-07-12)
 
 
