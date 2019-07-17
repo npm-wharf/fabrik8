@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.1](https://github.com/npm-wharf/fabrik8/compare/v1.6.0...v1.6.1) (2019-07-17)
+
+
+### Bug Fixes
+
+* properly fetch common settings in --slug mode ([389f0d1](https://github.com/npm-wharf/fabrik8/commit/389f0d1))
+
+
+
 ## [1.6.0](https://github.com/npm-wharf/fabrik8/compare/v1.5.1...v1.6.0) (2019-07-17)
 
 
