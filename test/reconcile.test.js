@@ -185,7 +185,9 @@ describe('reconciler', () => {
           applicationCredentials: SERVICE_ACCOUNTS[1].client_email,
           credentials: SERVICE_ACCOUNTS[0].client_email
         },
-        cluster: { ...CLUSTER_DEFAULTS }
+        cluster: { ...CLUSTER_DEFAULTS },
+        tokens: { prop: '{{slug}}-prop' },
+        common: {}
       }
       let processArgv
 
@@ -226,6 +228,7 @@ describe('reconciler', () => {
           },
           hikaruSettings: {
             ...expectedCommon,
+            prop: 'mycluster-prop',
             awsZone: expectedCommon.domain,
             subdomain: expectedCommon.name
           }
@@ -246,7 +249,8 @@ describe('reconciler', () => {
           applicationCredentials: SERVICE_ACCOUNTS[0].client_email
         },
         tokens: { ...TOKEN_DEFAULTS },
-        cluster: { ...CLUSTER_DEFAULTS }
+        cluster: { ...CLUSTER_DEFAULTS },
+        common: {}
       }
       const COMMON = {
         name: 'mycluster',
