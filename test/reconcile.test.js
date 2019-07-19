@@ -319,6 +319,94 @@ describe('reconciler', () => {
         })
       })
     })
+
+    describe('with existing cluster data in slug mode', () => {
+      const DEFAULTS = {
+        allowedDomains: ['npme.io', 'google.io'],
+        ...DEFAULT_PROPS,
+        credentials: SERVICE_ACCOUNTS[0].client_email,
+        applicationCredentials: SERVICE_ACCOUNTS[0].client_email,
+
+        serviceAccounts: {
+          service_account: SERVICE_ACCOUNTS[1].client_email,
+          credentials: SERVICE_ACCOUNTS[0].client_email,
+          applicationCredentials: SERVICE_ACCOUNTS[0].client_email
+        },
+        tokens: { ...TOKEN_DEFAULTS },
+        cluster: { ...CLUSTER_DEFAULTS },
+        common: {}
+      }
+      const COMMON = {
+        name: 'mycluster',
+        slug: 'mycluster',
+        url: 'mycluster.google.io',
+        domain: 'npme.io',
+        projectId: 'mycluster',
+        environment: 'production',
+        user: 'admin',
+        password: UUID
+      }
+      const STORED = {
+        specification: '.',
+        cluster: {
+          ...CLUSTER_DEFAULTS,
+          ...COMMON,
+          clusterName: 'mycluster',
+          credentials: SERVICE_ACCOUNTS[0].client_email
+        },
+        common: COMMON,
+        tokens: {
+          ...TOKEN_DEFAULTS,
+          ...COMMON,
+          awsZone: COMMON.domain,
+          subdomain: COMMON.name
+        },
+        credentials: SERVICE_ACCOUNTS[0].client_email
+      }
+      let processArgv
+
+      before(() => {
+        processArgv = createReconciler(
+          {
+            async getCommon () {
+              return DEFAULTS
+            },
+            async getServiceAccount (email) {
+              return SERVICE_ACCOUNTS.find(json => json.client_email === email)
+            },
+            async getCluster (name) {
+              name.should.equal('mycluster')
+              return { value: STORED }
+            }
+          },
+          {
+            v4 () {
+              return UUID
+            }
+          }
+        ).processArgv
+      })
+
+      it('should process argv and get options', async () => {
+        const result = await processArgv({ slug: 'mycluster', specification: '.' })
+
+        result.should.eql({
+          specification: STORED.specification,
+          kubeformSettings: {
+            ...STORED.cluster,
+            credentials: SERVICE_ACCOUNTS[0],
+            applicationCredentials: SERVICE_ACCOUNTS[0]
+          },
+          hikaruSettings: {
+            ...STORED.tokens
+          }
+        })
+      })
+
+      it('should throw if the cluster does not exist', async () => {
+        await processArgv({ slug: 'gone', specification: '.' }).should.be.rejectedWith(Error)
+      })
+    })
   })
 
   describe('_reconcileName', () => {
