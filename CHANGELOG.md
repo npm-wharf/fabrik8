@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.2](https://github.com/npm-wharf/fabrik8/compare/v1.6.1...v1.6.2) (2019-07-19)
+
+
+### Bug Fixes
+
+* properly set applicationCredentials when re-running ([#12](https://github.com/npm-wharf/fabrik8/issues/12)) ([27a3438](https://github.com/npm-wharf/fabrik8/commit/27a3438))
+
+
+
 ### [1.6.1](https://github.com/npm-wharf/fabrik8/compare/v1.6.0...v1.6.1) (2019-07-17)
 
 
