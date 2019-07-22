@@ -210,13 +210,18 @@ describe('reconciler', () => {
       })
 
       it('should process argv and get options', async () => {
-        const result = await processArgv({ name: 'mycluster', clusterName: 'mycluster-01', specification: '.' })
+        const result = await processArgv({
+          name: 'mycluster',
+          clusterName: 'mycluster-01',
+          zone: ['us-west2-a'],
+          specification: '.' })
         const expectedCommon = {
           name: 'mycluster',
           slug: 'mycluster',
           url: 'mycluster.npme.io',
           domain: 'npme.io',
           projectId: 'mycluster',
+          zones: ['us-west2-a'],
           environment: 'production'
         }
         result.should.eql({
@@ -260,6 +265,7 @@ describe('reconciler', () => {
         projectId: 'mycluster',
         environment: 'production',
         user: 'admin',
+        zones: ['us-central1-a'],
         password: UUID
       }
       const STORED = {

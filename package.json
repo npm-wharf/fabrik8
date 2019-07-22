@@ -50,6 +50,7 @@
     "bole": "^3.0.2",
     "chalk": "^2.4.1",
     "dotenv": "^7.0.0",
+    "fast-deep-equal": "^2.0.1",
     "fauxdash": "^1.4.0",
     "inquirer": "^6.2.0",
     "js-yaml": "^3.13.1",
