@@ -1,5 +1,7 @@
-require('./setup')
+const sinon = require('sinon')
 const API = require('../lib/api')
+const chai = require('chai')
+chai.use(require('chai-as-promised'))
 
 describe('API', function () {
   const clusterConfig = {

@@ -1,4 +1,3 @@
-require('./setup')
 const createReconciler = require('../lib/reconcile')
 
 const SERVICE_ACCOUNTS = [{
