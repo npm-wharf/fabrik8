@@ -1,11 +1,6 @@
 require('./setup')
 const API = require('../lib/api')
 
-const events = {
-  raise () {},
-  emit () {}
-}
-
 describe('API', function () {
   const clusterConfig = {
     name: 'description',
@@ -44,34 +39,27 @@ describe('API', function () {
 
   describe('when initialization fails on cluster provision', function () {
     let fabrik8
-    let onExpectation
     let createExpectations
     const hikaru = {
       deployCluster: () => {}
     }
     before(function () {
-      onExpectation = sinon.mock('on').thrice()
       createExpectations = sinon.mock('create')
         .withArgs(clusterConfig)
         .once()
         .rejects(new Error('provisioning failed'))
       class Kubeform {
         constructor () {
-          this.on = onExpectation
           this.create = createExpectations
         }
       }
 
-      fabrik8 = API(events, Kubeform, hikaru)
+      fabrik8 = API(Kubeform, hikaru)
     })
 
     it('should fail to initialize during provisioning', function () {
       return fabrik8.initialize(clusterConfig, specificationUrl, data, options)
         .should.eventually.be.rejectedWith('provisioning failed')
-    })
-
-    it('should call on to subscribe to events', function () {
-      onExpectation.verify()
     })
 
     it('should call create', function () {
@@ -86,21 +74,18 @@ describe('API', function () {
     describe('and deploy fails', function () {
       let hMock
       let fabrik8
-      let onExpectation
       let createExpectations
       let tokenList
       const hikaru = {
         deployCluster: () => {}
       }
       before(function () {
-        onExpectation = sinon.mock('on').thrice()
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
           .resolves({ ...clusterDetail })
         class Kubeform {
           constructor () {
-            this.on = onExpectation
             this.create = createExpectations
           }
         }
@@ -123,16 +108,12 @@ describe('API', function () {
           }, HIKARU_AUTH)
           .once()
           .rejects(err)
-        fabrik8 = API(events, Kubeform, hikaru)
+        fabrik8 = API(Kubeform, hikaru)
       })
 
       it('should fail to initialize during provisioning', function () {
         return fabrik8.initialize(clusterConfig, specificationUrl, data, options)
           .should.eventually.be.rejectedWith('tokens are missing')
-      })
-
-      it('should call on to subscribe to events', function () {
-        onExpectation.verify()
       })
 
       it('should call create', function () {
@@ -152,21 +133,18 @@ describe('API', function () {
       let fabrik8
       let specData
       let clusterInfo
-      let onExpectation
       let createExpectations
       const hikaru = {
         deployCluster: () => {}
       }
 
       before(function () {
-        onExpectation = sinon.mock('on').thrice()
         createExpectations = sinon.mock('create')
           .withArgs(clusterConfig)
           .once()
           .resolves({ ...clusterDetail, credentials: SERVICE_ACCOUNT })
         class Kubeform {
           constructor () {
-            this.on = onExpectation
             this.create = createExpectations
           }
         }
@@ -193,16 +171,12 @@ describe('API', function () {
 
         let tempSpec = { ...specData, ...options, masterIP: '192.168.1.1', credentials: SERVICE_ACCOUNT }
         clusterInfo = { cluster: { ...clusterDetail, credentials: SERVICE_ACCOUNT }, tokens: tempSpec }
-        fabrik8 = API(events, Kubeform, hikaru)
+        fabrik8 = API(Kubeform, hikaru)
       })
 
       it('should initialize during provisioning', function () {
         return fabrik8.initialize(clusterConfig, specificationUrl, specData, options)
           .should.eventually.eql(clusterInfo)
-      })
-
-      it('should call on to subscribe to events', function () {
-        onExpectation.verify()
       })
 
       it('should call create', function () {
@@ -224,21 +198,18 @@ describe('API', function () {
     let data
     let clusterInfo
     let onCluster
-    let onExpectation
     let createExpectations
     const hikaru = {
       deployCluster: () => {}
     }
 
     before(function () {
-      onExpectation = sinon.mock('on').thrice()
       createExpectations = sinon.mock('create')
         .withArgs(clusterConfig)
         .once()
         .resolves({ ...clusterDetail })
       class Kubeform {
         constructor () {
-          this.on = onExpectation
           this.create = createExpectations
         }
       }
@@ -282,16 +253,12 @@ describe('API', function () {
         }
       }
 
-      fabrik8 = API(events, Kubeform, hikaru)
+      fabrik8 = API(Kubeform, hikaru)
     })
 
     it('should initialize during provisioning', function () {
       return fabrik8.initialize(clusterConfig, specificationUrl, data, options)
         .should.eventually.eql(clusterInfo)
-    })
-
-    it('should call on to subscribe to events', function () {
-      onExpectation.verify()
     })
 
     it('should call create', function () {
@@ -334,7 +301,7 @@ describe('API', function () {
           .once()
           .rejects(err)
 
-        fabrik8 = API(events, Kubeform, hikaru)
+        fabrik8 = API(Kubeform, hikaru)
       })
 
       it('should fail to initialize during provisioning', function () {
@@ -356,7 +323,6 @@ describe('API', function () {
       let newSpec
       let specData
       let clusterInfo
-      let onCalls = []
       let createExpectations
       const hikaru = {
         deployCluster: () => {}
@@ -372,7 +338,6 @@ describe('API', function () {
             this.create = createExpectations
           }
           on (name, cb) {
-            onCalls.push(name)
             cb()
           }
         }
@@ -402,7 +367,7 @@ describe('API', function () {
           }
         }
 
-        fabrik8 = API(events, Kubeform, hikaru)
+        fabrik8 = API(Kubeform, hikaru)
       })
 
       it('should initialize during provisioning', function () {
@@ -412,11 +377,6 @@ describe('API', function () {
 
       it('should call hikaru.deployCluster', function () {
         hMock.verify()
-        onCalls.should.eql([
-          'prerequisites-created',
-          'bucket-permissions-set',
-          'cluster-initialized'
-        ])
       })
     })
   })
