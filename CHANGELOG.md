@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/npm-wharf/fabrik8/compare/v1.6.3...v1.7.0) (2019-07-24)
+
+
+### Features
+
+* automatically set up kubeconfig with cluster ([#14](https://github.com/npm-wharf/fabrik8/issues/14)) ([04ce81a](https://github.com/npm-wharf/fabrik8/commit/04ce81a))
+* make sure maintenance windows are properly set ([#15](https://github.com/npm-wharf/fabrik8/issues/15)) ([b404895](https://github.com/npm-wharf/fabrik8/commit/b404895))
+
+
+
 ### [1.6.3](https://github.com/npm-wharf/fabrik8/compare/v1.6.2...v1.6.3) (2019-07-22)
 
 
