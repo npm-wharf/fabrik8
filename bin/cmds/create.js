@@ -2,7 +2,6 @@ const createInfoClient = require('@npm-wharf/cluster-info-client')
 const { setMaintenanceWindow, setMaintenanceTime, getMaintenanceTime } = require('../../lib/maintenance-window')
 const container = require('@google-cloud/container')
 const createReconciler = require('../../lib/reconcile')
-const commonArgs = require('./common-args')
 const bole = require('bole')
 const log = bole('fabrik8')
 const fs = require('fs')
@@ -70,8 +69,7 @@ exports.build = {
   provider: {
     description: 'the cloud provider to use, defaults to KUBE_SERVICE environment variable',
     default: process.env.KUBE_SERVICE || 'GKE'
-  },
-  ...commonArgs.vault()
+  }
 }
 
 exports.handler = function (argv) {
