@@ -50,6 +50,33 @@ async function main () {
       applicationCredentials: 'resource-manager-svc@my-project.iam.gserviceaccount.com'
     },
 
+    maintenanceWindows: {
+      P100: {
+        environments: ['dev', 'staging'],
+        zones: [
+          'europe*'
+        ],
+        startTime: '19:00'
+      },
+      P200: {
+        zones: [
+          'northamerica*',
+          'southamerica*',
+          'us-east*',
+          'us-central*'
+        ],
+        startTime: '00:00'
+      },
+      P300: {
+        zones: [
+          'us-west*',
+          'asia*',
+          'australia*'
+        ],
+        startTime: '12:00'
+      }
+    },
+
     // used by hikaru
     tokens: {
       awsAccount: 'AASDGHJKASGDJKASGDJ',
