@@ -642,6 +642,7 @@ describe('reconciler', () => {
 
       it('should work', async () => {
         const common = {
+          ...DEFAULT_PROPS,
           projectId: 'myproject',
           user: 'admin',
           password: 'hunter2',
