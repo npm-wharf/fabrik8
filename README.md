@@ -104,23 +104,6 @@ Values from the defaults can also be overridden as command line args, by prefixi
 Command line arguments take precedence over saved cluster-info, which take precedence over default cluster-info.  Cluster info-will be saved everytime you run `fabrik8`, so re-running `fabrik8 create` can be used to change values.
 
 
-### `fabrik8 init ./path/to/config -a ./path/to/authFile -s ./path/to/spec -f ./path/to/data -p gke`
-
-**DEPRECATED**
-
-Similar to a blend of CLIs from its component libraries, `fabrik8` requires the following arguments:
-
- * `./path/to/config`: configuration to base cluster provisioning on
- * `-a`, `--auth`: the authfile to use when authenticating with the cloud provider
- * `-m`, `--spec`: the path or URL to the mcgonagall specification
- * `-f`, `--data`: the path to the data file to supply values for specification tokens
- * `-o`, `--output`: the file to write data about the new cluster to (defaults to `cluster-{date-time}.json`)
- * `-p`, `--provider`: the cloud provider to use
- * `-s`, `--scale`: a scale factor (if available in the spec)
- * `-t`, `--tokens`: where to write out all data used to populate the specification
- * `-v`, `--apiVersion`: the Kubernetes API version (will attempt to detect the default version)
- * `--verbose`: verbose logging, defaults to false
-
 [travis-image]: https://travis-ci.org/npm-wharf/fabrik8.svg?branch=master
 [travis-url]: https://travis-ci.org/npm-wharf/fabrik8
 [coveralls-url]: https://coveralls.io/github/npm-wharf/fabrik8?branch=master
