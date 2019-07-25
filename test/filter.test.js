@@ -1,4 +1,3 @@
-require('./setup')
 const filterUndefined = require('../lib/filter')
 
 describe('filterUndefined', () => {
