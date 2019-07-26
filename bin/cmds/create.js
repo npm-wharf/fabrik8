@@ -41,6 +41,7 @@ exports.builder = function (yargs) {
       },
       environment: {
         description: 'the environment of the cluster, e.g. development, production',
+        alias: ['env'],
         default: 'production'
       },
       zone: {
