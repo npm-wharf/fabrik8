@@ -3,17 +3,8 @@ const bistre = require('bistre')()
 const bole = require('bole')
 const log = bole('fabrik8')
 
-exports.command = 'list'
-exports.desc = 'lists clusters'
-exports.builder = function (yargs) {
-  return yargs.options({
-    channel: {
-      alias: 'c',
-      description: 'limit results to a given channel'
-    }
-  })
-}
-
+exports.command = 'unregister <clusterName>'
+exports.desc = 'unregister a cluster from the cluster info Vault. Does not delete the GKE cluster or any associated resources in GCS.'
 exports.handler = function (argv) {
   main(argv)
     .catch(err => {
@@ -31,7 +22,7 @@ async function main (argv) {
 
   // fetch info from vault
   const {
-    channel,
+    clusterName,
     vaultHost,
     vaultToken,
     vaultRoleId,
@@ -43,18 +34,15 @@ async function main (argv) {
     throw new Error('Invalid configuration for cluster-info Vault.')
   }
 
-  let list
-
   const clusterInfo = createInfoClient({ vaultToken, vaultHost, vaultRoleId, vaultSecretId })
-  if (channel) {
-    list = await clusterInfo.listClustersByChannel(channel)
-  } else {
-    list = await clusterInfo.listClusters()
-  }
 
-  if (list.length > 0) {
-    log.info(list.join('\n'))
-  } else {
-    log.debug('No clusters returned')
+  log.info(`Removing '${clusterName}'...`)
+  try {
+    await clusterInfo.unregisterCluster(clusterName)
+    log.info(`Removed '${clusterName}'.`)
+  } catch (e) {
+    log.error(`Unable to remove '${clusterName}'`)
+    log.error(e.message)
   }
+  clusterInfo.close()
 }
