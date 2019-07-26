@@ -49,8 +49,12 @@ async function main (argv) {
   if (channel) {
     list = await clusterInfo.listClustersByChannel(channel)
   } else {
-    list = await clusterInfo.listClusters(channel)
+    list = await clusterInfo.listClusters()
   }
 
-  log.info(list.join('\n'))
+  if (list.length > 0) {
+    log.info(list.join('\n'))
+  } else {
+    log.debug('No clusters returned')
+  }
 }
