@@ -9,39 +9,40 @@ const fs = require('fs')
 const fabricator = require('../../lib')
 const bistre = require('bistre')()
 
-exports.command = 'create [options]'
+exports.command = 'create'
 exports.desc = 'performs full provisioning of a Kubernetes cluster and deployment of software.\n' +
 'It will fetch defaults from a configured Vault server, and store results in Vault.\n' +
 'Defaults can be overridden as extra yargs arguments, e.g.:\n\n' +
 '--arg-organizationId 1234567890 or --arg-cluster.worker.memory 26GB'
-exports.build = {
-  url: {
+exports.builder = function (yargs) {
+  return yargs
+  .option('url', {
     description: 'the url of the cluster you wish to create, e.g. `mycluster.example.com`',
     alias: 'u'
-  },
-  name: {
+  })
+  .option('name', {
     description: 'the name, or general identifier of the cluster.  Can be inferred from the url',
     alias: ['n']
-  },
-  slug: {
+  })
+  .option('slug', {
     description: 'the general identifier of the cluster.  Can be inferred from the url.  ' +
     'If explicitly passed and the cluster already exists, the existing cluster config will be used with no modifications.',
     alias: ['s']
-  },
-  clusterName: {
+  })
+  .option('clusterName', {
     desription: 'the name of the cluster in GKE'
-  },
-  domain: {
+  })
+  .option('domain', {
     description: 'the subdomain of the cluster.  Can be inferred from the url'
-  },
-  projectId: {
+  })
+  .option('projectId', {
     description: 'the name of the gke project to use.  Can be inferred from the cluster name or slug'
-  },
-  environment: {
+  })
+  .option('environment', {
     description: 'the environment of the cluster, e.g. development, production',
     default: 'production'
-  },
-  zone: {
+  })
+  .option('zone', {
     description: 'the GCS zone to create the cluster in',
     coerce (input) {
       try {
@@ -50,26 +51,20 @@ exports.build = {
       if (result) return result
       return input.split(',')
     }
-  },
-  specification: {
+  })
+  .option('specification', {
     alias: ['m', 'spec'],
     required: true,
     description: 'the path or URL to the mcgonagall specification'
-  },
-  verbose: {
-    alias: 'v',
-    description: 'output verbose logging (status check output for hikaru)',
-    default: false,
-    boolean: true
-  },
-  output: {
+  })
+  .option('output', {
     alias: 'o',
     description: 'the file to which to write cluster data, for debugging purposes'
-  },
-  provider: {
+  })
+  .option('provider', {
     description: 'the cloud provider to use, defaults to KUBE_SERVICE environment variable',
     default: process.env.KUBE_SERVICE || 'GKE'
-  }
+  })
 }
 
 exports.handler = function (argv) {
