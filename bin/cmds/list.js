@@ -41,6 +41,8 @@ async function main (argv) {
     throw new Error('Invalid configuration for cluster-info Vault.')
   }
 
+  let list
+
   const clusterInfo = createInfoClient({ vaultToken, vaultHost, vaultRoleId, vaultSecretId })
   if (channel) {
     list = await clusterInfo.listClustersByChannel(channel)

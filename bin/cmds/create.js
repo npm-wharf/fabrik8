@@ -16,55 +16,55 @@ exports.desc = 'performs full provisioning of a Kubernetes cluster and deploymen
 '--arg-organizationId 1234567890 or --arg-cluster.worker.memory 26GB'
 exports.builder = function (yargs) {
   return yargs
-  .option('url', {
-    description: 'the url of the cluster you wish to create, e.g. `mycluster.example.com`',
-    alias: 'u'
-  })
-  .option('name', {
-    description: 'the name, or general identifier of the cluster.  Can be inferred from the url',
-    alias: ['n']
-  })
-  .option('slug', {
-    description: 'the general identifier of the cluster.  Can be inferred from the url.  ' +
+    .option('url', {
+      description: 'the url of the cluster you wish to create, e.g. `mycluster.example.com`',
+      alias: 'u'
+    })
+    .option('name', {
+      description: 'the name, or general identifier of the cluster.  Can be inferred from the url',
+      alias: ['n']
+    })
+    .option('slug', {
+      description: 'the general identifier of the cluster.  Can be inferred from the url.  ' +
     'If explicitly passed and the cluster already exists, the existing cluster config will be used with no modifications.',
-    alias: ['s']
-  })
-  .option('clusterName', {
-    desription: 'the name of the cluster in GKE'
-  })
-  .option('domain', {
-    description: 'the subdomain of the cluster.  Can be inferred from the url'
-  })
-  .option('projectId', {
-    description: 'the name of the gke project to use.  Can be inferred from the cluster name or slug'
-  })
-  .option('environment', {
-    description: 'the environment of the cluster, e.g. development, production',
-    default: 'production'
-  })
-  .option('zone', {
-    description: 'the GCS zone to create the cluster in',
-    coerce (input) {
-      try {
-        var result = JSON.parse(input)
-      } catch (e) {}
-      if (result) return result
-      return input.split(',')
-    }
-  })
-  .option('specification', {
-    alias: ['m', 'spec'],
-    required: true,
-    description: 'the path or URL to the mcgonagall specification'
-  })
-  .option('output', {
-    alias: 'o',
-    description: 'the file to which to write cluster data, for debugging purposes'
-  })
-  .option('provider', {
-    description: 'the cloud provider to use, defaults to KUBE_SERVICE environment variable',
-    default: process.env.KUBE_SERVICE || 'GKE'
-  })
+      alias: ['s']
+    })
+    .option('clusterName', {
+      desription: 'the name of the cluster in GKE'
+    })
+    .option('domain', {
+      description: 'the subdomain of the cluster.  Can be inferred from the url'
+    })
+    .option('projectId', {
+      description: 'the name of the gke project to use.  Can be inferred from the cluster name or slug'
+    })
+    .option('environment', {
+      description: 'the environment of the cluster, e.g. development, production',
+      default: 'production'
+    })
+    .option('zone', {
+      description: 'the GCS zone to create the cluster in',
+      coerce (input) {
+        try {
+          var result = JSON.parse(input)
+        } catch (e) {}
+        if (result) return result
+        return input.split(',')
+      }
+    })
+    .option('specification', {
+      alias: ['m', 'spec'],
+      required: true,
+      description: 'the path or URL to the mcgonagall specification'
+    })
+    .option('output', {
+      alias: 'o',
+      description: 'the file to which to write cluster data, for debugging purposes'
+    })
+    .option('provider', {
+      description: 'the cloud provider to use, defaults to KUBE_SERVICE environment variable',
+      default: process.env.KUBE_SERVICE || 'GKE'
+    })
 }
 
 exports.handler = function (argv) {

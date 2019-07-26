@@ -10,10 +10,10 @@ require('yargs') // eslint-disable-line no-unused-expressions
   .version()
   .options({
     verbose: {
-    alias: 'v',
-    description: 'output verbose logging (status check output for hikaru)',
-    default: false,
-    boolean: true
+      alias: 'v',
+      description: 'output verbose logging (status check output for hikaru)',
+      default: false,
+      boolean: true
     },
     vaultHost: {
       description: 'the host of the vault server containing sensitive cluster information, auth data, and defaults',
