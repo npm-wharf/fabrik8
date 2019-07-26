@@ -6,9 +6,11 @@ const log = bole('fabrik8')
 exports.command = 'list'
 exports.desc = 'lists clusters'
 exports.builder = function (yargs) {
-  return yargs.option('channel', {
-    alias: 'c',
-    description: 'limit results to a given channel'
+  return yargs.options({
+    channel: {
+      alias: 'c',
+      description: 'limit results to a given channel'
+    }
   })
 }
 
