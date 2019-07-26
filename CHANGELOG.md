@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/npm-wharf/fabrik8/compare/v1.7.0...v1.8.0) (2019-07-26)
+
+
+### Features
+
+* **list:** add list command ([#18](https://github.com/npm-wharf/fabrik8/issues/18)) ([9b430f8](https://github.com/npm-wharf/fabrik8/commit/9b430f8))
+
+
+
 ## [1.7.0](https://github.com/npm-wharf/fabrik8/compare/v1.6.3...v1.7.0) (2019-07-24)
 
 
