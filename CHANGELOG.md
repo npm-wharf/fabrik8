@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.1](https://github.com/npm-wharf/fabrik8/compare/v1.8.0...v1.8.1) (2019-07-27)
+
+
+### Bug Fixes
+
+* add env alias ([fe81ce6](https://github.com/npm-wharf/fabrik8/commit/fe81ce6))
+* update cluster-info-client ([2fb6711](https://github.com/npm-wharf/fabrik8/commit/2fb6711))
+
+
+
 ## [1.8.0](https://github.com/npm-wharf/fabrik8/compare/v1.7.0...v1.8.0) (2019-07-26)
 
 
