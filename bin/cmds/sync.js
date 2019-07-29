@@ -7,6 +7,7 @@ const createInfoClient = require('@npm-wharf/cluster-info-client')
 const bistre = require('bistre')()
 const bole = require('bole')
 const log = bole('fabrik8')
+const setupKubectx = require('../../lib/kubectx')
 
 exports.command = 'sync'
 exports.desc = 'sync vault cluster info to your local kubectl config'
@@ -56,6 +57,7 @@ async function main (argv) {
   const existingContexts = config.contexts.map(context => context.name).filter(name => name.startsWith('cluster/'))
   const desiredContexts = []
 
+  const syncList = []
   const desiredChannels = ['dev', 'staging', 'production']
   for (const channel of desiredChannels) {
     const clusters = await clusterInfo.listClustersByChannel(channel)
@@ -70,7 +72,8 @@ async function main (argv) {
 
       log.info(`${channel} missing locally. Fetching cluster information from vault...`)
       try {
-        var cluster = await clusterInfo.getCluster(name)
+        const cluster = await clusterInfo.getCluster(name)
+        syncList.push([cluster.value, channel, name])
         log.debug(`${name}: done`)
       } catch (err) {
         log.debug(`${name}: error!`)
@@ -78,48 +81,8 @@ async function main (argv) {
         process.exitCode = 1
         continue
       }
-
-      try {
-        var project = cluster.value.cluster.projectId
-        var zone = cluster.value.cluster.zones[0]
-        var clusterName = cluster.value.cluster.clusterName
-        var defaultContextName = `gke_${project}_${zone}_${clusterName}`
-      } catch (err) {
-        log.error(`${name} cluster contains invalid data! make sure vault looks correct`)
-        process.exitCode = 1
-        continue
-      }
-
-      try {
-        if (!existingContexts.includes(defaultContextName)) {
-          log.info('  asking gcloud to configure cluster...')
-          const res = spawnSync('gcloud', ['container', 'clusters', 'get-credentials', clusterName, '--project', project, '--zone', zone])
-          if (res.error) {
-            throw res.error
-          }
-
-          if (res.status !== 0) {
-            throw new Error(res.stderr)
-          }
-          log.debug(`${name} done`)
-        }
-
-        log.info('  asking kubectl to rename cluster context...')
-        const res = spawnSync('kubectl', ['config', 'rename-context', defaultContextName, desiredName])
-        if (res.error) {
-          throw res.error
-        }
-
-        if (res.status !== 0) {
-          throw new Error(res.stderr)
-        }
-        log.debug('done')
-      } catch (err) {
-        log.debug(`${name} error!`)
-        log.error(err.stack)
-        process.exitCode = 1
-      }
     }
+    await setupKubectx(syncList)
   }
 
   const extraneousContexts = existingContexts.filter(name => !desiredContexts.includes(name))
