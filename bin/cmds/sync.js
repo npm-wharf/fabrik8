@@ -70,7 +70,7 @@ async function main (argv) {
         continue
       }
 
-      log.info(`${channel} missing locally. Fetching cluster information from vault...`)
+      log.info(`${name} missing locally. Fetching cluster information from vault...`)
       try {
         const cluster = await clusterInfo.getCluster(name)
         syncList.push([cluster.value.cluster, channel, name])
