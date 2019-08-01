@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.3](https://github.com/npm-wharf/fabrik8/compare/v1.9.2...v1.9.3) (2019-08-01)
+
+
+
 ### [1.9.2](https://github.com/npm-wharf/fabrik8/compare/v1.9.1...v1.9.2) (2019-08-01)
 
 
