@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.2](https://github.com/npm-wharf/fabrik8/compare/v1.9.1...v1.9.2) (2019-08-01)
+
+
+### Bug Fixes
+
+* pass correct object to kubectx sync ([437ed23](https://github.com/npm-wharf/fabrik8/commit/437ed23))
+
+
+
 ### [1.9.1](https://github.com/npm-wharf/fabrik8/compare/v1.9.0...v1.9.1) (2019-08-01)
 
 
