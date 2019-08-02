@@ -45,7 +45,7 @@
     "@google-cloud/container": "^1.1.3",
     "@npm-wharf/cluster-info-client": "^2.0.8",
     "@npm-wharf/hikaru": "^1.16.0",
-    "@npm-wharf/kubeform": "^1.6.2",
+    "@npm-wharf/kubeform": "^1.6.3",
     "ajv": "^6.10.0",
     "bistre": "^1.0.1",
     "bole": "^3.0.2",
